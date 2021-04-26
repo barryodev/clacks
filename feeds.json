@@ -1,0 +1,16 @@
+{
+  "feeds": [
+    {
+      "name": "The Register - BOFH",
+      "url": "https://www.theregister.com/offbeat/bofh/headlines.atom"
+    },
+    {
+      "name": "My Blog",
+      "url": "https://barryodriscoll.net/feed/atom/"
+    },
+    {
+      "name": "Boing Boing",
+      "url": "https://boingboing.net/feed/atom"
+    }
+  ]
+}
