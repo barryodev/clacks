@@ -19,7 +19,7 @@ type AllFeeds struct {
 }
 
 type Feed struct {
-	Name 	string	`json:"name"`
+	Name 	string
 	URL 	string 	`json:"url"`
 	entries []Entry
 }
@@ -54,15 +54,16 @@ func loadJsonConfig() (AllFeeds, error){
 }
 
 // use gofeed library to load data from atom feed
-func loadFeedData(url string) ([]Entry, error) {
+func loadFeedData(url string) (string, []Entry, error) {
 	fp := gofeed.NewParser()
 	fp.UserAgent = "Clacks - Terminal Atom Reader"
 	feedData, err := fp.ParseURL(url)
 	if err != nil {
-		return []Entry{}, errors.New("Error processing atom feed: " + err.Error())
+		return "", []Entry{}, errors.New("Error processing atom feed: " + err.Error())
 	}
 
 	if len(feedData.Items) > 0 {
+		feedName := feedData.Title
 		entries := make([]Entry, len(feedData.Items))
 		for i, item := range feedData.Items {
 			entries[i] = Entry{
@@ -70,10 +71,10 @@ func loadFeedData(url string) ([]Entry, error) {
 				content: strings.TrimSpace(html.UnescapeString(strip.StripTags(item.Description))),
 			}
 		}
-		return entries, nil
+		return feedName, entries, nil
 	}
 
-	return []Entry{}, nil
+	return "", []Entry{}, nil
 
 }
 
@@ -89,10 +90,11 @@ func main() {
 	}
 
 	for i := 0; i < len(allFeeds.Feeds); i++ {
-		entries, atomFeedError := loadFeedData(allFeeds.Feeds[i].URL)
+		feedName, entries, atomFeedError := loadFeedData(allFeeds.Feeds[i].URL)
 		if atomFeedError != nil {
 			panic(atomFeedError)
 		} else {
+			allFeeds.Feeds[i].Name = feedName
 			allFeeds.Feeds[i].entries = entries
 		}
 	}
