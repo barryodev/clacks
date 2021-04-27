@@ -1,4 +1,4 @@
-module clacks
+module github.com/barryodev/clacks
 
 go 1.16
 
