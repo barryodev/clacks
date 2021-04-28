@@ -26,12 +26,14 @@ Json file called feeds.json in the same directory with the following format:
 - Add feeds name/url to feeds.json. 
 - Navigate lists using arrow keys. 
 - Hit enter/esc to select and deselect list items.
+- Hit enter on an entry to open in default system browser.  
 - Ctrl-C to quit.
 
 ## Dependiences 
 - [gofeed](https://github.com/mmcdole/gofeed) - feed parser
 - [tview](https://github.com/rivo/tview) - terminal ui library
 - [html-strip-tags-go](https://github.com/grokify/html-strip-tags-go) - strips html tags
+- [gox](https://github.com/icza/gox) - utility library used to open browser cross platform manner
 
 ## Credits
 - The tview [postgres](https://github.com/rivo/tview/wiki/Postgres) example.
@@ -39,5 +41,5 @@ Json file called feeds.json in the same directory with the following format:
 
 ## TODO
 - Add a menu that has help instructions, add new feed, remove feed, reload feeds, quit
-- Add functionality to open browser with a selected entry 
 - Handle RSS feeds, shouldn't be much extra work as [gofeed](https://github.com/mmcdole/gofeed) supports detecting feed type and handling both.
+- Change the border colour of ui element currently active

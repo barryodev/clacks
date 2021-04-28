@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"github.com/icza/gox/osx"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -20,6 +22,7 @@ var (
 	feedList		*tview.List
 	entriesList 	*tview.List
 	entryTextView 	*tview.TextView
+	flex			*tview.Flex
 	safeFeedData	*SafeFeedData
 	allFeeds		*AllFeeds
 )
@@ -37,6 +40,7 @@ type Feed struct {
 type Entry struct {
 	title 	string
 	content string
+	url		string
 }
 
 // FeedDataModel struct of an feed title and slice of entries
@@ -107,6 +111,7 @@ func loadFeedData(url string) (FeedDataModel, error) {
 			entrySlice[i] = Entry{
 				title: html.UnescapeString(strip.StripTags(item.Title)),
 				content: strings.TrimSpace(html.UnescapeString(strip.StripTags(item.Description))),
+				url: item.Link,
 			}
 		}
 		return FeedDataModel{name: feedName, entries: entrySlice}, nil
@@ -187,7 +192,28 @@ func loadEntriesIntoList(url string) {
 	entriesList.Clear()
 	feedData := safeFeedData.GetEntries(url)
 	for _, entry := range feedData.entries {
-		entriesList.AddItem(entry.title, "", 0, nil)
+		entriesList.AddItem(entry.title, entry.url, 0, func() {
+			// when an item in the entry list is selected, open the link in the browser
+			_, url = entriesList.GetItemText(entriesList.GetCurrentItem())
+			// if on windows escape &
+			if runtime.GOOS == "windows" {
+				strings.ReplaceAll(url, "&", "^&")
+			}
+			//use gox library to make platform specific call to open url in browser
+
+			openBrowserModal := tview.NewModal()
+			openBrowserModal.SetText("Open entry in browser?").
+				AddButtons([]string{"Yes", "Cancel"}).
+				SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+					if buttonLabel == "Yes" {
+						osx.OpenDefault(url)
+					}
+					app.SetRoot(flex, false)
+					app.SetFocus(entriesList)
+				})
+			app.SetRoot(openBrowserModal, false)
+
+		})
 	}
 }
 
@@ -216,7 +242,7 @@ func main() {
 	entryTextView.SetText("Fetching Feed Data")
 
 	// set up flex layout
-	flex := tview.NewFlex().
+	flex = tview.NewFlex().
 		AddItem(feedList, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(entriesList, 0, 1, false).
