@@ -37,6 +37,7 @@ Json file called feeds.json in the same directory with the following format:
 
 ## Credits
 - The tview [postgres](https://github.com/rivo/tview/wiki/Postgres) example.
+- This stackoverflow [answer](https://stackoverflow.com/questions/39320371/how-start-web-server-to-open-page-in-browser-in-golang) on how to open a browser in go and escape urls on windows by [icza](https://stackoverflow.com/users/1705598/icza).
 - Terry Pratchett for the name [clacks](https://discworld.fandom.com/wiki/Clacks).
 
 ## TODO
