@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	fmt "fmt"
+	"github.com/gdamore/tcell/v2"
 	"github.com/icza/gox/osx"
 	"io/ioutil"
 	"os"
@@ -23,9 +25,14 @@ var (
 	entriesList 	*tview.List
 	entryTextView 	*tview.TextView
 	flex			*tview.Flex
+	menuTextView	*tview.TextView
+	pages			*tview.Pages
 	safeFeedData	*SafeFeedData
 	allFeeds		*AllFeeds
 )
+
+const feedPage = "feedsPage"
+const helpPage = "helpPage"
 
 // AllFeeds & Feed struct to unmarshall json config
 type AllFeeds struct {
@@ -206,7 +213,10 @@ func loadEntriesIntoList(url string) {
 				AddButtons([]string{"Yes", "Cancel"}).
 				SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 					if buttonLabel == "Yes" {
-						osx.OpenDefault(url)
+						err := osx.OpenDefault(url)
+						if err != nil {
+							panic(err)
+						}
 					}
 					app.SetRoot(flex, false)
 					app.SetFocus(entriesList)
@@ -217,12 +227,89 @@ func loadEntriesIntoList(url string) {
 	}
 }
 
+// create text view of the menu
+func initMenu() *tview.TextView {
+	menu := tview.NewTextView()
+	menu.SetRegions(true).SetDynamicColors(true).SetBorder(false)
+	menu.SetText(`["help"][white:blue](h) Help[""][:black] ["help"][white:blue](q) Quit [""]`)
+	return menu
+}
+
+// handle user pressing menu shortcuts
+func handleMenuKeyPresses() {
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyCtrlQ:
+			app.Stop()
+			os.Exit(0)
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'q':
+				app.Stop()
+			case 'h':
+				createHelpPage()
+			}
+		}
+		return event
+	})
+}
+
+//create the modal box describing application's functions, embed in a page and display
+func createHelpPage() {
+		helpBox := tview.NewModal()
+		var stringBuilder strings.Builder
+		_, _ = fmt.Fprint(&stringBuilder, "\nUse Arrow keys to navigate list items\n")
+		_, _ = fmt.Fprint(&stringBuilder, "\nUse Enter and Esc to move between feed and entries lists\n")
+		_, _ = fmt.Fprint(&stringBuilder, "\nHit Enter on an entry to open it in your default browser\n")
+		_, _ = fmt.Fprint(&stringBuilder, "\nFeeds config are loaded from feeds.json\n")
+		_, _ = fmt.Fprint(&stringBuilder, "\nCtrl-C or q to exit\n")
+		helpBox.SetText(stringBuilder.String())
+		helpBox.AddButtons([]string{"Done"})
+
+		// handle user hitting done
+		helpBox.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "Done" {
+				pages.SwitchToPage(feedPage)
+				pages.RemovePage(helpPage)
+				app.SetFocus(feedList)
+			}
+		})
+
+		pages.AddPage(helpPage, helpBox, true, true)
+		app.SetFocus(helpBox)
+}
+
+// setup the main application layout and embed in a page
+func createFeedPage() {
+	// set up flex layout
+	flex = tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(tview.NewFlex().
+			AddItem(feedList, 0, 1, false).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+				AddItem(entriesList, 0, 1, false).
+				AddItem(entryTextView, 0, 2, false), 0, 2, false),
+			0, 1, false).
+		AddItem(tview.NewFlex().
+			AddItem(tview.NewBox(), 0, 1, false).
+			AddItem(menuTextView, len(menuTextView.GetText(true)), 1, false).
+			AddItem(tview.NewBox(), 0, 1, false),
+			1, 0, false)
+
+	// async call to load feed data
+	go loadAllFeedDataAndUpdateInterface()
+
+	handleMenuKeyPresses()
+
+	pages.AddPage(feedPage, flex, true, true)
+}
+
 func main() {
 	// init threadsafe feed data
 	safeFeedData = &SafeFeedData{feedData: make(map[string]FeedDataModel)}
 
 	// init ui elements
 	app = tview.NewApplication()
+	pages = tview.NewPages()
 
 	feedList = tview.NewList().ShowSecondaryText(false)
 	feedList.SetBorder(true).SetTitle("Feeds")
@@ -241,19 +328,14 @@ func main() {
 	entryTextView.SetTitle("Description")
 	entryTextView.SetText("Fetching Feed Data")
 
-	// set up flex layout
-	flex = tview.NewFlex().
-		AddItem(feedList, 0, 1, false).
-		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-			AddItem(entriesList, 0, 1, false).
-			AddItem(entryTextView, 0, 2, false), 0, 2, false)
+	menuTextView = initMenu()
 
-	// async call to load feed data
-	go loadAllFeedDataAndUpdateInterface()
+	createFeedPage()
 
 	// call to run tview app
-	if uiError := app.SetRoot(flex, true).SetFocus(feedList).Run(); uiError != nil {
+	if uiError := app.SetRoot(pages, true).SetFocus(feedList).Run(); uiError != nil {
 		panic(uiError)
 	}
 
 }
+
