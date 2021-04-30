@@ -26,6 +26,7 @@ var (
 	entryTextView 	*tview.TextView
 	flex			*tview.Flex
 	menuTextView	*tview.TextView
+	previousFocus	tview.Primitive
 	pages			*tview.Pages
 	safeFeedData	*SafeFeedData
 	allFeeds		*AllFeeds
@@ -263,6 +264,8 @@ func handleMenuKeyPresses() {
 
 // create the modal box describing application's functions, embed in a page and display
 func createHelpPage() {
+	previousFocus = app.GetFocus()
+
 	var stringBuilder strings.Builder
 	_, _ = fmt.Fprint(&stringBuilder, "\nUse Arrow keys to navigate list items\n")
 	_, _ = fmt.Fprint(&stringBuilder, "\nUse Enter and Esc to move between feed and entries lists\n")
@@ -275,7 +278,7 @@ func createHelpPage() {
 		if buttonLabel == "Done" {
 			pages.SwitchToPage(feedPage)
 			pages.RemovePage(helpPage)
-			app.SetFocus(feedList)
+			app.SetFocus(previousFocus)
 			menuTextView.Highlight()
 		}
 	})
@@ -284,6 +287,8 @@ func createHelpPage() {
 
 // create modal box asking user if they want to quit application
 func createQuitPage() {
+	previousFocus = app.GetFocus()
+
 	quitBox := createOverlayModal(quitPage, "Are you sure you want to quit?", []string{"Yes", "No"},
 	func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Yes" {
@@ -292,7 +297,7 @@ func createQuitPage() {
 		} else if buttonLabel == "No" {
 			pages.SwitchToPage(feedPage)
 			pages.RemovePage(quitPage)
-			app.SetFocus(feedList)
+			app.SetFocus(previousFocus)
 			menuTextView.Highlight()
 		}
 	})
@@ -302,6 +307,8 @@ func createQuitPage() {
 
 // create modal box asking if user wants to refresh page
 func createRefreshPage() {
+	previousFocus = app.GetFocus()
+
 	refreshBox := createOverlayModal(refreshPage, "Do you want to refresh feed data?", []string{"Yes", "No"},
 		func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Yes" {
@@ -310,7 +317,7 @@ func createRefreshPage() {
 			}
 			pages.SwitchToPage(feedPage)
 			pages.RemovePage(refreshPage)
-			app.SetFocus(feedList)
+			app.SetFocus(previousFocus)
 			menuTextView.Highlight()
 		})
 	app.SetFocus(refreshBox)
