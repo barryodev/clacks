@@ -90,7 +90,7 @@ func loadJsonConfig() (*AllFeeds, error){
 	//open config file
 	configFile, err := os.Open("feeds.json")
 	if err != nil {
-		return nil, errors.New("Error loading feeds.json file: " + err.Error())
+		return nil, errors.New("error: could not find feeds.json config file")
 	}
 
 	//load data from file
@@ -103,7 +103,7 @@ func loadJsonConfig() (*AllFeeds, error){
 	var loadedFeeds AllFeeds
 	err = json.Unmarshal(byteValue, &loadedFeeds)
 	if err != nil {
-		return nil, errors.New("Error unmarshalling json: " + err.Error())
+		return nil, errors.New("error: reading feeds.json, please check structure")
 	}
 
 	return &loadedFeeds, nil
@@ -115,7 +115,7 @@ func loadFeedData(url string) (FeedDataModel, error) {
 	fp.UserAgent = "Clacks - Terminal Atom Reader"
 	feedData, err := fp.ParseURL(url)
 	if err != nil {
-		return FeedDataModel{}, errors.New("Error processing atom feed: " + err.Error())
+		return FeedDataModel{}, errors.New("error loading feed: " + err.Error())
 	}
 
 	if len(feedData.Items) > 0 {
@@ -136,6 +136,14 @@ func loadFeedData(url string) (FeedDataModel, error) {
 
 // This will run asynchronously to fetch atom feeds and load the data into the interface
 func loadAllFeedDataAndUpdateInterface() {
+	defer func() {
+		if r := recover(); r != nil {
+			err := r.(error)
+			app.QueueUpdateDraw(func() {
+				createErrorPage(err.Error())
+			})
+		}
+	}()
 	var configError error
 	allFeeds, configError = loadJsonConfig()
 	if configError != nil {
@@ -269,6 +277,18 @@ func handleMenuKeyPresses() {
 	})
 }
 
+// create modal box displaying error message after panic and quit app
+func createErrorPage(errorMessage string) {
+	errorBox := createOverlayModal(helpPage, errorMessage, []string{"Okay"},
+		func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "Okay" {
+				app.Stop()
+			}
+		})
+	app.SetInputCapture(nil)
+	app.SetFocus(errorBox)
+}
+
 // create the modal box describing application's functions, embed in a page and display
 func createHelpPage() {
 	previousFocus = app.GetFocus()
@@ -365,11 +385,7 @@ func createFeedPage() {
 			AddItem(tview.NewBox(), 0, 1, false),
 			1, 0, false)
 
-	// async call to load feed data
-	go loadAllFeedDataAndUpdateInterface()
-
 	handleMenuKeyPresses()
-
 	pages.AddPage(feedPage, flex, true, true)
 }
 
@@ -403,6 +419,9 @@ func main() {
 	menuTextView = initMenu()
 
 	createFeedPage()
+
+	// async call to load feed data
+	go loadAllFeedDataAndUpdateInterface()
 
 	// call to run tview app
 	if uiError := app.SetRoot(pages, true).SetFocus(feedList).Run(); uiError != nil {
