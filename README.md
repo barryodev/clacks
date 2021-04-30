@@ -1,5 +1,5 @@
 # clacks
-A Terminal Atom/RSS Reader - reads a list of feeds from a json file and asynchronously fetches them.
+A Terminal Based Atom/RSS Reader that reads a list of feeds from a json file and displays them, once selected a feed entry can be opened in the browser.
 
 ## Demo
 ![demo](img/clacksDemo.gif)
@@ -17,6 +17,9 @@ Json file called feeds.json in the same directory with the following format:
     },
     {
       "url": "https://boingboing.net/feed/atom"
+    },
+    {
+      "url": "https://lifehacker.com/rss"
     }
   ]
 }
@@ -41,7 +44,4 @@ Json file called feeds.json in the same directory with the following format:
 - The tview [presentation](https://github.com/rivo/tview/tree/master/demos/presentation) demo.  
 - This stackoverflow [answer](https://stackoverflow.com/questions/39320371/how-start-web-server-to-open-page-in-browser-in-golang) on how to open a browser in go and escape urls on windows by [icza](https://stackoverflow.com/users/1705598/icza).
 - Terry Pratchett for the name [clacks](https://discworld.fandom.com/wiki/Clacks).
-
-## TODO
-- Change the border colour of ui element currently active
 
