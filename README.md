@@ -42,6 +42,7 @@ Json file called feeds.json in the same directory with the following format:
 - Terry Pratchett for the name [clacks](https://discworld.fandom.com/wiki/Clacks).
 
 ## TODO
-- Add menu functions to refresh, add and remove feeds
+- Add menu functions to add and remove feeds
 - Handle RSS feeds, shouldn't be much extra work as [gofeed](https://github.com/mmcdole/gofeed) supports detecting feed type and handling both.
 - Change the border colour of ui element currently active
+

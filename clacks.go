@@ -34,7 +34,9 @@ var (
 const feedPage = "feedsPage"
 const helpPage = "helpPage"
 const quitPage = "quitPage"
+const refreshPage = "refreshPage"
 const openBrowserPage = "open"
+const refreshMenuRegion = "refresh"
 const helpMenuRegion = "help"
 const quitMenuRegion = "quit"
 
@@ -188,7 +190,9 @@ func loadAllFeedDataAndUpdateInterface() {
 func loadEntryTextView(i int) {
 	entryTextView.Clear()
 	feedData := safeFeedData.GetEntries(getSelectedFeedUrl())
-	entryTextView.SetText(feedData.entries[i].content)
+	if feedData.entries != nil {
+		entryTextView.SetText(feedData.entries[i].content)
+	}
 }
 
 // Urls of feeds are stored as secondary text on list items, uses that to look up selected feed
@@ -222,7 +226,6 @@ func loadEntriesIntoList(url string) {
 					pages.SwitchToPage(feedPage)
 					pages.RemovePage(openBrowserPage)
 					app.SetFocus(entriesList)
-
 				})
 			app.SetFocus(openBrowserModal)
 		})
@@ -233,7 +236,7 @@ func loadEntriesIntoList(url string) {
 func initMenu() *tview.TextView {
 	menu := tview.NewTextView()
 	menu.SetRegions(true).SetDynamicColors(true).SetBorder(false)
-	menu.SetText(`["` + helpMenuRegion + `"][white:blue](h) Help [""][:black] ["` + quitMenuRegion + `"][white:blue](q) Quit [""]`)
+	menu.SetText(`["` + refreshMenuRegion + `"][white:blue](r) Refresh [""][:black] ["` + helpMenuRegion + `"][white:blue](h) Help [""][:black] ["` + quitMenuRegion + `"][white:blue](q) Quit [""]`)
 	return menu
 }
 
@@ -241,9 +244,6 @@ func initMenu() *tview.TextView {
 func handleMenuKeyPresses() {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyCtrlC:
-			createQuitPage()
-			menuTextView.Highlight(quitMenuRegion)
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'q':
@@ -252,6 +252,9 @@ func handleMenuKeyPresses() {
 			case 'h':
 				createHelpPage()
 				menuTextView.Highlight(helpMenuRegion)
+			case 'r':
+				createRefreshPage()
+				menuTextView.Highlight(refreshMenuRegion)
 			}
 		}
 		return event
@@ -295,6 +298,32 @@ func createQuitPage() {
 	})
 
 	app.SetFocus(quitBox)
+}
+
+// create modal box asking if user wants to refresh page
+func createRefreshPage() {
+	refreshBox := createOverlayModal(refreshPage, "Do you want to refresh feed data?", []string{"Yes", "No"},
+		func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "Yes" {
+				setUITextToFetchingData()
+				go loadAllFeedDataAndUpdateInterface()
+			}
+			pages.SwitchToPage(feedPage)
+			pages.RemovePage(refreshPage)
+			app.SetFocus(feedList)
+			menuTextView.Highlight()
+		})
+	app.SetFocus(refreshBox)
+}
+
+func setUITextToFetchingData() {
+	feedList.Clear()
+	feedList.AddItem("Fetching Feed Data", "", 0, nil)
+	entriesList.Clear()
+	entriesList.AddItem("Fetching Feed Data", "", 0, nil)
+	entryTextView.Clear()
+	entryTextView.SetText("Fetching Feed Data")
+
 }
 
 func createOverlayModal(pageName, modalText string, buttons []string, buttonPressedHandler func(buttonIndex int, buttonLabel string)) *tview.Modal {
