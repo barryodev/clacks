@@ -381,6 +381,7 @@ func main() {
 		})
 
 	entryTextView.SetBorder(true)
+	entryTextView.SetWordWrap(true)
 	entryTextView.SetTitle("Description")
 	entryTextView.SetText("Fetching Feed Data")
 
