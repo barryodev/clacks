@@ -33,6 +33,7 @@ var (
 
 const feedPage = "feedsPage"
 const helpPage = "helpPage"
+const quitPage = "quitPage"
 const helpMenuRegion = "help"
 const quitMenuRegion = "quit"
 
@@ -233,7 +234,7 @@ func loadEntriesIntoList(url string) {
 func initMenu() *tview.TextView {
 	menu := tview.NewTextView()
 	menu.SetRegions(true).SetDynamicColors(true).SetBorder(false)
-	menu.SetText(`["` + helpMenuRegion + `"][white:blue](h) Help[""][:black] ["` + quitMenuRegion + `"][white:blue](q) Quit [""]`)
+	menu.SetText(`["` + helpMenuRegion + `"][white:blue](h) Help [""][:black] ["` + quitMenuRegion + `"][white:blue](q) Quit [""]`)
 	return menu
 }
 
@@ -241,13 +242,14 @@ func initMenu() *tview.TextView {
 func handleMenuKeyPresses() {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyCtrlQ:
-			app.Stop()
-			os.Exit(0)
+		case tcell.KeyCtrlC:
+			createQuitPage()
+			menuTextView.Highlight(quitMenuRegion)
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'q':
-				app.Stop()
+				createQuitPage()
+				menuTextView.Highlight(quitMenuRegion)
 			case 'h':
 				createHelpPage()
 				menuTextView.Highlight(helpMenuRegion)
@@ -257,30 +259,52 @@ func handleMenuKeyPresses() {
 	})
 }
 
-//create the modal box describing application's functions, embed in a page and display
+// create the modal box describing application's functions, embed in a page and display
 func createHelpPage() {
-		helpBox := tview.NewModal()
-		var stringBuilder strings.Builder
-		_, _ = fmt.Fprint(&stringBuilder, "\nUse Arrow keys to navigate list items\n")
-		_, _ = fmt.Fprint(&stringBuilder, "\nUse Enter and Esc to move between feed and entries lists\n")
-		_, _ = fmt.Fprint(&stringBuilder, "\nHit Enter on an entry to open it in your default browser\n")
-		_, _ = fmt.Fprint(&stringBuilder, "\nFeeds config are loaded from feeds.json\n")
-		_, _ = fmt.Fprint(&stringBuilder, "\nCtrl-C or q to exit\n")
-		helpBox.SetText(stringBuilder.String())
-		helpBox.AddButtons([]string{"Done"})
+	var stringBuilder strings.Builder
+	_, _ = fmt.Fprint(&stringBuilder, "\nUse Arrow keys to navigate list items\n")
+	_, _ = fmt.Fprint(&stringBuilder, "\nUse Enter and Esc to move between feed and entries lists\n")
+	_, _ = fmt.Fprint(&stringBuilder, "\nHit Enter on an entry to open it in your default browser\n")
+	_, _ = fmt.Fprint(&stringBuilder, "\nFeeds config are loaded from feeds.json\n")
+	_, _ = fmt.Fprint(&stringBuilder, "\nCtrl-C or q to exit\n")
 
-		// handle user hitting done
-		helpBox.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			if buttonLabel == "Done" {
-				pages.SwitchToPage(feedPage)
-				pages.RemovePage(helpPage)
-				app.SetFocus(feedList)
-				menuTextView.Highlight()
-			}
-		})
+	helpBox := createOverlayModal(helpPage, stringBuilder.String(), []string{"Done"},
+	func(buttonIndex int, buttonLabel string) {
+		if buttonLabel == "Done" {
+			pages.SwitchToPage(feedPage)
+			pages.RemovePage(helpPage)
+			app.SetFocus(feedList)
+			menuTextView.Highlight()
+		}
+	})
+	app.SetFocus(helpBox)
+}
 
-		pages.AddPage(helpPage, helpBox, true, true)
-		app.SetFocus(helpBox)
+// create modal box asking user if they want to quit application
+func createQuitPage() {
+	quitBox := createOverlayModal(quitPage, "Are you sure you want to quit?", []string{"Yes", "No"},
+	func(buttonIndex int, buttonLabel string) {
+		if buttonLabel == "Yes" {
+			app.Stop()
+			os.Exit(0)
+		} else if buttonLabel == "No" {
+			pages.SwitchToPage(feedPage)
+			pages.RemovePage(quitPage)
+			app.SetFocus(feedList)
+			menuTextView.Highlight()
+		}
+	})
+
+	app.SetFocus(quitBox)
+}
+
+func createOverlayModal(pageName, modalText string, buttons []string, buttonPressedHandler func(buttonIndex int, buttonLabel string)) *tview.Modal {
+	modalBox := tview.NewModal()
+	modalBox.SetText(modalText)
+	modalBox.AddButtons(buttons)
+	modalBox.SetDoneFunc(buttonPressedHandler)
+	pages.AddPage(pageName, modalBox, true, true)
+	return modalBox
 }
 
 // setup the main application layout and embed in a page
