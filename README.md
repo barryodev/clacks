@@ -1,5 +1,5 @@
 # clacks
-A Terminal Atom Reader - reads a list of atom feeds from a json file and asynchronously fetches them.
+A Terminal Atom/RSS Reader - reads a list of feeds from a json file and asynchronously fetches them.
 
 ## Demo
 ![demo](img/clacksDemo.gif)
@@ -26,7 +26,8 @@ Json file called feeds.json in the same directory with the following format:
 - Add feeds name/url to feeds.json. 
 - Navigate lists using arrow keys. 
 - Hit enter/esc to select and deselect list items.
-- Hit enter on an entry to open in default system browser.  
+- Hit enter on an entry to open in default system browser.
+- Use menu shortcuts to perform related tasks.
 - Ctrl-C to quit.
 
 ## Dependiences 
@@ -42,7 +43,5 @@ Json file called feeds.json in the same directory with the following format:
 - Terry Pratchett for the name [clacks](https://discworld.fandom.com/wiki/Clacks).
 
 ## TODO
-- Add menu functions to add and remove feeds
-- Handle RSS feeds, shouldn't be much extra work as [gofeed](https://github.com/mmcdole/gofeed) supports detecting feed type and handling both.
 - Change the border colour of ui element currently active
 
