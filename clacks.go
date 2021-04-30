@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	fmt "fmt"
+	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/icza/gox/osx"
 	"io/ioutil"
@@ -33,6 +33,8 @@ var (
 
 const feedPage = "feedsPage"
 const helpPage = "helpPage"
+const helpMenuRegion = "help"
+const quitMenuRegion = "quit"
 
 // AllFeeds & Feed struct to unmarshall json config
 type AllFeeds struct {
@@ -231,7 +233,7 @@ func loadEntriesIntoList(url string) {
 func initMenu() *tview.TextView {
 	menu := tview.NewTextView()
 	menu.SetRegions(true).SetDynamicColors(true).SetBorder(false)
-	menu.SetText(`["help"][white:blue](h) Help[""][:black] ["help"][white:blue](q) Quit [""]`)
+	menu.SetText(`["` + helpMenuRegion + `"][white:blue](h) Help[""][:black] ["` + quitMenuRegion + `"][white:blue](q) Quit [""]`)
 	return menu
 }
 
@@ -248,6 +250,7 @@ func handleMenuKeyPresses() {
 				app.Stop()
 			case 'h':
 				createHelpPage()
+				menuTextView.Highlight(helpMenuRegion)
 			}
 		}
 		return event
@@ -272,6 +275,7 @@ func createHelpPage() {
 				pages.SwitchToPage(feedPage)
 				pages.RemovePage(helpPage)
 				app.SetFocus(feedList)
+				menuTextView.Highlight()
 			}
 		})
 
