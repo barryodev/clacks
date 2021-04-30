@@ -159,7 +159,7 @@ func loadAllFeedDataAndUpdateInterface() {
 			feedData := safeFeedData.GetEntries(feed.URL)
 			feedList.AddItem(feedData.name, feed.URL, 0, func() {
 				// handle user selecting item by moving focus to entry list
-				app.SetFocus(entriesList)
+				switchAppFocus(entriesList.Box, feedList.Box, entriesList)
 			})
 		}
 
@@ -175,7 +175,7 @@ func loadAllFeedDataAndUpdateInterface() {
 
 		// when user hits escape in entries list, move focus back to feed list
 		entriesList.SetDoneFunc(func() {
-			app.SetFocus(feedList)
+			switchAppFocus(feedList.Box, entriesList.Box, feedList)
 		})
 
 		// load initial state of interface
@@ -185,6 +185,12 @@ func loadAllFeedDataAndUpdateInterface() {
 			loadEntryTextView(0)
 		}
 	})
+}
+
+func switchAppFocus(newBox *tview.Box, oldBox *tview.Box, newFocus tview.Primitive) {
+	oldBox.SetBorderColor(tcell.ColorWhite)
+	newBox.SetBorderColor(tcell.ColorBlue)
+	app.SetFocus(newFocus)
 }
 
 // Looks up the text of the corresponding entry and sets it on the text view
@@ -226,9 +232,10 @@ func loadEntriesIntoList(url string) {
 					}
 					pages.SwitchToPage(feedPage)
 					pages.RemovePage(openBrowserPage)
+					switchAppFocus(entriesList.Box, entryTextView.Box, entriesList)
 					app.SetFocus(entriesList)
 				})
-			app.SetFocus(openBrowserModal)
+			switchAppFocus(entryTextView.Box, entriesList.Box, openBrowserModal)
 		})
 	}
 }
@@ -376,6 +383,7 @@ func main() {
 
 	feedList = tview.NewList().ShowSecondaryText(false)
 	feedList.SetBorder(true).SetTitle("Feeds")
+	feedList.SetBorderColor(tcell.ColorBlue)
 	feedList.AddItem("Fetching Feed Data", "", 0, nil)
 
 	entriesList = tview.NewList().ShowSecondaryText(false)
