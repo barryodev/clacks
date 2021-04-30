@@ -34,6 +34,7 @@ var (
 const feedPage = "feedsPage"
 const helpPage = "helpPage"
 const quitPage = "quitPage"
+const openBrowserPage = "open"
 const helpMenuRegion = "help"
 const quitMenuRegion = "quit"
 
@@ -128,7 +129,6 @@ func loadFeedData(url string) (FeedDataModel, error) {
 	}
 
 	return FeedDataModel{}, nil
-
 }
 
 // This will run asynchronously to fetch atom feeds and load the data into the interface
@@ -211,21 +211,20 @@ func loadEntriesIntoList(url string) {
 			}
 			//use gox library to make platform specific call to open url in browser
 
-			openBrowserModal := tview.NewModal()
-			openBrowserModal.SetText("Open entry in browser?").
-				AddButtons([]string{"Yes", "Cancel"}).
-				SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			openBrowserModal := createOverlayModal(openBrowserPage, "Open entry in browser?", []string{"Yes", "No"},
+				func(buttonIndex int, buttonLabel string) {
 					if buttonLabel == "Yes" {
 						err := osx.OpenDefault(url)
 						if err != nil {
 							panic(err)
 						}
 					}
-					app.SetRoot(flex, false)
+					pages.SwitchToPage(feedPage)
+					pages.RemovePage(openBrowserPage)
 					app.SetFocus(entriesList)
-				})
-			app.SetRoot(openBrowserModal, false)
 
+				})
+			app.SetFocus(openBrowserModal)
 		})
 	}
 }
