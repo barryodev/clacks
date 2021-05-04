@@ -105,13 +105,14 @@ func LoadFeedData(url string) (FeedDataModel, error) {
 	return FeedDataModel{}, nil
 }
 
-// This will run asynchronously to fetch atom feeds and load the data into the interface
-func LoadAllFeedDataAndUpdateInterface() {
+// LoadAllFeedDataAndUpdateInterface This will run asynchronously to fetch atom feeds and load
+// the data into the interface
+func LoadAllFeedDataAndUpdateInterface(ui *UI) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := r.(error)
-			app.QueueUpdateDraw(func() {
-				CreateErrorPage(err.Error())
+			ui.app.QueueUpdateDraw(func() {
+				ui.createErrorPage(err.Error())
 			})
 		}
 	}()
@@ -130,5 +131,5 @@ func LoadAllFeedDataAndUpdateInterface() {
 		}
 	}
 
-	LoadFeedDataIntoLists()
+	ui.loadFeedDataIntoLists()
 }
