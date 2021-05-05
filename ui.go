@@ -20,7 +20,7 @@ const helpMenuRegion = "help"
 const quitMenuRegion = "quit"
 
 type UI struct {
-	app 			*tview.Application
+	app 			TermApplication
 	feedList		*tview.List
 	entriesList 	*tview.List
 	entryTextView 	*tview.TextView
@@ -30,10 +30,21 @@ type UI struct {
 	pages			*tview.Pages
 }
 
-// CreateUI create and configure all ui elements for app start up
-func CreateUI(app *tview.Application) *UI {
-	ui := &UI{}
+// TermApplication interface for the terminal UI app
+type TermApplication interface {
+	Run() error
+	Draw() *tview.Application
+	Stop()
+	SetRoot(root tview.Primitive, fullscreen bool) *tview.Application
+	SetFocus(p tview.Primitive) *tview.Application
+	SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Application
+	QueueUpdateDraw(f func()) *tview.Application
+	GetFocus() tview.Primitive
+}
 
+// CreateUI create and configure all ui elements for app start up
+func CreateUI(app TermApplication) *UI {
+	ui := &UI{}
 	ui.app = app
 
 	ui.feedList = tview.NewList().ShowSecondaryText(false)
@@ -81,6 +92,7 @@ func CreateUI(app *tview.Application) *UI {
 	return ui
 }
 
+// start ui run loop
 func (ui *UI) startUILoop() error {
 	err := ui.app.Run()
 	if err != nil {
