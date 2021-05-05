@@ -43,5 +43,8 @@ Json file called feeds.json in the same directory with the following format:
 - The tview [postgres](https://github.com/rivo/tview/wiki/Postgres) example.
 - The tview [presentation](https://github.com/rivo/tview/tree/master/demos/presentation) demo.  
 - This stackoverflow [answer](https://stackoverflow.com/questions/39320371/how-start-web-server-to-open-page-in-browser-in-golang) on how to open a browser in go and escape urls on windows by [icza](https://stackoverflow.com/users/1705598/icza).
+- The project [gdu](https://github.com/dundee/gdu) provided a great example on how to unit test code that calls the tview library with stubs.
 - Terry Pratchett for the name [clacks](https://discworld.fandom.com/wiki/Clacks).
 
+## Alternatives
+- [GORSS](https://github.com/lallassu/gorss) is a terminal atom/rss reader also written in go that is built directly on tcell, the library tview is built on.
