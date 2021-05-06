@@ -8,3 +8,6 @@ bin/
 # Jetbrains IDEA stuff
 .idea/
 *.iml
+
+# Coverage Report
+coverage.txt
