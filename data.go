@@ -5,12 +5,25 @@ import (
 	"errors"
 	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/mmcdole/gofeed"
+
 	"html"
 	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
 )
+
+// Data struct holding config and feed data
+type Data struct {
+	safeFeedData	*SafeFeedData
+	allFeeds		*AllFeeds
+}
+
+type FeedParser interface {
+	ParseURL(feedURL string) (feed *gofeed.Feed, err error)
+}
+
+const configFileName = "feeds.json"
 
 // AllFeeds & Feed struct to unmarshall json config
 type AllFeeds struct {
@@ -57,36 +70,35 @@ func (c *SafeFeedData) GetEntries(url string) FeedDataModel {
 }
 
 // LoadJsonConfig load feeds from json file
-func LoadJsonConfig() (*AllFeeds, error){
+func (data *Data) loadJsonConfig(config string) error {
 	//open config file
-	configFile, err := os.Open("feeds.json")
+	configFile, err := os.Open(config)
 	if err != nil {
-		return nil, errors.New("error: could not find feeds.json config file")
+		return errors.New("error: could not find feeds.json config file")
 	}
 
 	//load data from file
 	byteValue, err := ioutil.ReadAll(configFile)
 	if err != nil {
-		return nil, errors.New("Error Reading from feeds.json file: " + err.Error())
+		return errors.New("Error Reading from feeds.json file: " + err.Error())
 	}
 
 	//unmarshall json
 	var loadedFeeds AllFeeds
 	err = json.Unmarshal(byteValue, &loadedFeeds)
 	if err != nil {
-		return nil, errors.New("error: reading feeds.json, please check structure")
+		return errors.New("error: reading feeds.json, please check structure")
 	}
 
-	return &loadedFeeds, nil
+	data.allFeeds = &loadedFeeds
+	return nil
 }
 
 // LoadFeedData use gofeed library to load data from atom feed
-func LoadFeedData(url string) (FeedDataModel, error) {
-	fp := gofeed.NewParser()
-	fp.UserAgent = "Clacks - Terminal Atom Reader"
-	feedData, err := fp.ParseURL(url)
+func (data *Data) loadFeedData(url string, parser FeedParser) error {
+	feedData, err := parser.ParseURL(url)
 	if err != nil {
-		return FeedDataModel{}, errors.New("error loading feed: " + err.Error())
+		return errors.New("error loading feed: " + err.Error())
 	}
 
 	if len(feedData.Items) > 0 {
@@ -99,37 +111,29 @@ func LoadFeedData(url string) (FeedDataModel, error) {
 				url: item.Link,
 			}
 		}
-		return FeedDataModel{name: feedName, entries: entrySlice}, nil
+		feedDataModel := FeedDataModel{name: feedName, entries: entrySlice}
+		data.safeFeedData.SetSiteData(url, feedDataModel)
+		return nil
 	}
 
-	return FeedDataModel{}, nil
+	//TODO handle feed having no entries
+	return nil
 }
 
-// LoadAllFeedDataAndUpdateInterface This will run asynchronously to fetch atom feeds and load
-// the data into the interface
-func LoadAllFeedDataAndUpdateInterface(ui *UI) {
-	defer func() {
-		if r := recover(); r != nil {
-			err := r.(error)
-			ui.app.QueueUpdateDraw(func() {
-				ui.createErrorPage(err.Error())
-			})
-		}
-	}()
+// asynchronously fetch atom feeds and load the data into the interface
+func (data *Data) loadAllFeedData(parser FeedParser) error {
 	var configError error
-	allFeeds, configError = LoadJsonConfig()
+	configError = data.loadJsonConfig(configFileName)
 	if configError != nil {
-		panic(configError)
+		return configError
 	}
 
-	for i := 0; i < len(allFeeds.Feeds); i++ {
-		feedData, atomFeedError := LoadFeedData(allFeeds.Feeds[i].URL)
+	for i := 0; i < len(data.allFeeds.Feeds); i++ {
+		atomFeedError := data.loadFeedData(data.allFeeds.Feeds[i].URL, parser)
 		if atomFeedError != nil {
-			panic(atomFeedError)
-		} else {
-			safeFeedData.SetSiteData(allFeeds.Feeds[i].URL, feedData)
+			return atomFeedError
 		}
 	}
 
-	ui.loadFeedDataIntoLists()
+	return nil
 }
