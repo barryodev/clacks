@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"github.com/gdamore/tcell/v2"
+	"github.com/mmcdole/gofeed"
 	"github.com/rivo/tview"
 	"sync"
 )
@@ -82,4 +83,29 @@ func (app *StubbedApp) QueueUpdateDraw(f func()) *tview.Application {
 	app.mutex.Unlock()
 	return nil
 }
+
+type StubbedParser struct {
+	fakeFeed	*gofeed.Feed
+	withError	bool
+}
+
+func createStubbedParser(fakeFeed *gofeed.Feed, withError bool) FeedParser {
+	parser := &StubbedParser{
+		fakeFeed: fakeFeed,
+		withError: withError,
+	}
+
+	return parser
+}
+
+// ParseURL stub
+func (parser *StubbedParser) ParseURL(feedURL string) (feed *gofeed.Feed, err error) {
+	if parser.withError {
+		return nil, errors.New("parser error")
+	} else {
+		return parser.fakeFeed, nil
+	}
+}
+
+
 

@@ -18,7 +18,7 @@ func LoadAllFeedDataAndUpdateInterface(ui *UI, data *Data){
 	fp := gofeed.NewParser()
 	fp.UserAgent = "Clacks - Terminal Atom Reader"
 
-	data.loadAllFeedData(fp)
+	data.loadDataFromFeeds(fp)
 	ui.updateInterface(data)
 }
 

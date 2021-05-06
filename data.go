@@ -121,7 +121,7 @@ func (data *Data) loadFeedData(url string, parser FeedParser) error {
 }
 
 // asynchronously fetch atom feeds and load the data into the interface
-func (data *Data) loadAllFeedData(parser FeedParser) error {
+func (data *Data) loadDataFromFeeds(parser FeedParser) error {
 	var configError error
 	configError = data.loadJsonConfig(configFileName)
 	if configError != nil {
