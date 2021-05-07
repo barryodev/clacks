@@ -34,7 +34,7 @@ func main() {
 
 	ui := CreateUI(app)
 
-	ui.handleMenuKeyPresses()
+	ui.setInputCaptureHandler()
 
 	// async call to load feed data
 	go LoadAllFeedDataAndUpdateInterface(ui, data)

@@ -193,24 +193,26 @@ func (ui *UI) loadEntriesIntoList(data *Data, url string) {
 }
 
 // handle user pressing menu shortcuts
-func (ui *UI) handleMenuKeyPresses() {
-	ui.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyRune:
-			switch event.Rune() {
-			case 'q':
-				ui.createQuitPage()
-				ui.menuTextView.Highlight(quitMenuRegion)
-			case 'h':
-				ui.createHelpPage()
-				ui.menuTextView.Highlight(helpMenuRegion)
-			case 'r':
-				ui.createRefreshPage()
-				ui.menuTextView.Highlight(refreshMenuRegion)
-			}
+func (ui *UI) setInputCaptureHandler() {
+	ui.app.SetInputCapture(ui.handleKeyboardPressEvents)
+}
+
+func (ui *UI) handleKeyboardPressEvents(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Key() {
+	case tcell.KeyRune:
+		switch event.Rune() {
+		case 'q':
+			ui.createQuitPage()
+			ui.menuTextView.Highlight(quitMenuRegion)
+		case 'h':
+			ui.createHelpPage()
+			ui.menuTextView.Highlight(helpMenuRegion)
+		case 'r':
+			ui.createRefreshPage()
+			ui.menuTextView.Highlight(refreshMenuRegion)
 		}
-		return event
-	})
+	}
+	return event
 }
 
 // create modal box displaying error message after panic and quit app
