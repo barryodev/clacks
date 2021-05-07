@@ -104,7 +104,12 @@ func (ui *UI) startUILoop() error {
 
 // Using QueueUpdateDraw as its a threadsafe way to update tview primitives
 func (ui *UI) updateInterface(data *Data) {
-	ui.app.QueueUpdateDraw(func() {
+	ui.app.QueueUpdateDraw(ui.loadInitialDataAndListNavigationFunctions(data))
+}
+
+// load data into list and setup functions to handle user navigating list
+func (ui *UI) loadInitialDataAndListNavigationFunctions(data *Data) func() {
+	return func() {
 		ui.feedList.Clear()
 		// add items to feed list
 		for _, feed := range data.allFeeds.Feeds {
@@ -134,9 +139,10 @@ func (ui *UI) updateInterface(data *Data) {
 		ui.loadEntriesIntoList(data, ui.getSelectedFeedUrl())
 		//make sure there's at least one entry in selected
 		if len(data.safeFeedData.GetEntries(ui.getSelectedFeedUrl()).entries) > 0 {
-			ui.loadEntryTextView(data,0)
+			ui.loadEntryTextView(data, 0)
 		}
-	})
+	}
+
 }
 
 func (ui *UI) switchAppFocus(newBox *tview.Box, oldBox *tview.Box, newFocus tview.Primitive) {

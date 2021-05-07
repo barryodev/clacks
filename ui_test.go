@@ -260,25 +260,45 @@ func TestHandleKeyboardPressRefreshEvents(t *testing.T) {
 	assert.Contains(t, screenContentsAsString, "Do you want to refresh feed data?")
 }
 
+func TestUserNavigatesLists(t *testing.T) {
+	app, simScreen := CreateTestAppWithSimScreen(100, 100)
+	defer simScreen.Fini()
+
+	ui := CreateUI(app)
+
+	data := createTestData()
+	ui.loadInitialDataAndListNavigationFunctions(data)()
+
+	feedName, _ := ui.feedList.GetItemText(0)
+	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).name, feedName)
+
+	ui.feedList.SetCurrentItem(1)
+	entryName, _ := ui.entriesList.GetItemText(ui.entriesList.GetCurrentItem())
+	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[0].title, entryName)
+
+	ui.entriesList.SetCurrentItem(1)
+	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[1].content, ui.entryTextView.GetText(true))
+}
+
 func createTestData() *Data {
 	safeFeedData := &SafeFeedData{feedData: make(map[string]FeedDataModel)}
-	safeFeedData.SetSiteData(testUrlOne, createFakeFeedDataModel("registry"))
-	safeFeedData.SetSiteData(testUrlTwo, createFakeFeedDataModel("google"))
+	safeFeedData.SetSiteData(testUrlOne, createFakeFeedDataModel("registry", testUrlOne))
+	safeFeedData.SetSiteData(testUrlTwo, createFakeFeedDataModel("google", testUrlTwo))
 
 	allFeeds := &AllFeeds{[]Feed{Feed{testUrlOne}, {testUrlTwo}}}
 	return &Data{safeFeedData: safeFeedData, allFeeds: allFeeds}
 }
 
-func createFakeFeedDataModel(name string) FeedDataModel {
+func createFakeFeedDataModel(name, url string) FeedDataModel {
 	fakeEntryOne := Entry{
 		title:   name + " fake title one",
-		url:     testUrlOne + "/one",
+		url:     url + "/one",
 		content: name + " fake content one",
 	}
 
 	fakeEntryTwo := Entry{
 		title:   name + " fake title two",
-		url:     testUrlOne + "/two",
+		url:     url + "/two",
 		content: name + " fake content two",
 	}
 
