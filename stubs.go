@@ -11,7 +11,10 @@ import (
 // CreateTestAppWithSimScreen returns app with simulation screen for tests
 func CreateTestAppWithSimScreen(width, height int) (*tview.Application, tcell.SimulationScreen) {
 	screen := tcell.NewSimulationScreen("UTF-8")
-	screen.Init()
+	err := screen.Init()
+	if err != nil {
+		return nil, nil
+	}
 	screen.SetSize(width, height)
 
 	app := tview.NewApplication()
@@ -31,9 +34,9 @@ type StubbedApp struct {
 // CreateStubbedApp returns app with simulation screen for tests
 func CreateStubbedApp(failRun bool) TermApplication {
 	app := &StubbedApp{
-		FailRun:     failRun,
-		UpdateDraws: make([]func(), 0, 1),
-		mutex:       &sync.Mutex{},
+		FailRun:		failRun,
+		UpdateDraws:	make([]func(), 0, 1),
+		mutex:			&sync.Mutex{},
 	}
 	return app
 }
@@ -41,9 +44,8 @@ func CreateStubbedApp(failRun bool) TermApplication {
 // Run does nothing
 func (app *StubbedApp) Run() error {
 	if app.FailRun {
-		return errors.New("Fail")
+		return errors.New("fail")
 	}
-
 	return nil
 }
 
@@ -51,7 +53,7 @@ func (app *StubbedApp) Run() error {
 func (app *StubbedApp) Stop() {}
 
 // SetRoot does nothing
-func (app *StubbedApp) SetRoot(root tview.Primitive, fullscreen bool) *tview.Application {
+func (app *StubbedApp) SetRoot(_ tview.Primitive, _ bool) *tview.Application {
 	return nil
 }
 
@@ -72,7 +74,7 @@ func (app *StubbedApp) SetFocus(p tview.Primitive) *tview.Application {
 }
 
 // SetInputCapture does nothing
-func (app *StubbedApp) SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Application {
+func (app *StubbedApp) SetInputCapture(_ func(event *tcell.EventKey) *tcell.EventKey) *tview.Application {
 	return nil
 }
 
@@ -99,13 +101,20 @@ func createStubbedParser(fakeFeed *gofeed.Feed, withError bool) FeedParser {
 }
 
 // ParseURL stub
-func (parser *StubbedParser) ParseURL(feedURL string) (feed *gofeed.Feed, err error) {
+func (parser *StubbedParser) ParseURL(_ string) (feed *gofeed.Feed, err error) {
 	if parser.withError {
 		return nil, errors.New("parser error")
 	} else {
 		return parser.fakeFeed, nil
 	}
 }
+
+type StubbedBrowserLauncher struct {}
+
+func (StubbedBrowserLauncher) OpenDefault(_ string) error {
+	return nil
+}
+
 
 
 

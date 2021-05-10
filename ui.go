@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
-	"github.com/icza/gox/osx"
 	"github.com/rivo/tview"
-	"os"
 	"runtime"
 	"strings"
 )
@@ -22,6 +20,7 @@ const quitMenuRegion = "quit"
 // UI tview ui elements
 type UI struct {
 	app 			TermApplication
+	browserLauncher BrowserLauncherInterface
 	feedList		*tview.List
 	entriesList 	*tview.List
 	entryTextView 	*tview.TextView
@@ -183,7 +182,7 @@ func (ui *UI) loadEntriesIntoList(data *Data, url string) {
 			openBrowserModal := ui.createOverlayModal(openBrowserPage, "Open entry in browser?", []string{"Yes", "No"},
 				func(buttonIndex int, buttonLabel string) {
 					if buttonLabel == "Yes" {
-						err := osx.OpenDefault(url)
+						err := ui.browserLauncher.OpenDefault(url)
 						if err != nil {
 							panic(err)
 						}
@@ -222,7 +221,7 @@ func (ui *UI) handleKeyboardPressEvents(event *tcell.EventKey) *tcell.EventKey {
 }
 
 // create modal box displaying error message after panic and quit app
-func (ui *UI) createErrorPage(errorMessage string) {
+func (ui *UI) createErrorPage(errorMessage string) *tview.Modal {
 	errorBox := ui.createOverlayModal(helpPage, errorMessage, []string{"Okay"},
 		func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Okay" {
@@ -231,6 +230,8 @@ func (ui *UI) createErrorPage(errorMessage string) {
 		})
 	ui.app.SetInputCapture(nil)
 	ui.app.SetFocus(errorBox)
+
+	return errorBox
 }
 
 // create the modal box describing application's functions, embed in a page and display
@@ -264,7 +265,6 @@ func (ui *UI) createQuitPage() {
 		func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Yes" {
 				ui.app.Stop()
-				os.Exit(0)
 			} else if buttonLabel == "No" {
 				ui.pages.SwitchToPage(feedPage)
 				ui.pages.RemovePage(quitPage)
