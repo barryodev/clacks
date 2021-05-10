@@ -16,7 +16,8 @@ import (
 // Data struct holding config and feed data
 type Data struct {
 	safeFeedData	*SafeFeedData
-	allFeeds		*AllFeeds
+	configData		*ConfigData
+	parser			FeedParser
 }
 
 type FeedParser interface {
@@ -25,8 +26,8 @@ type FeedParser interface {
 
 const configFileName = "feeds.json"
 
-// AllFeeds & Feed struct to unmarshall json config
-type AllFeeds struct {
+// ConfigData & Feed struct to unmarshall json config
+type ConfigData struct {
 	Feeds []Feed `json:"feeds"`
 }
 
@@ -69,6 +70,14 @@ func (c *SafeFeedData) GetEntries(url string) FeedDataModel {
 	return c.feedData[url]
 }
 
+// Clear clear all feed data, use before a refresh
+func (c *SafeFeedData) Clear() {
+	c.mu.Lock()
+	// Lock so only one goroutine at a time can access the map
+	c.feedData = make(map[string]FeedDataModel)
+	c.mu.Unlock()
+}
+
 // LoadJsonConfig load feeds from json file
 func (data *Data) loadJsonConfig(config string) error {
 	//open config file
@@ -84,19 +93,19 @@ func (data *Data) loadJsonConfig(config string) error {
 	}
 
 	//unmarshall json
-	var loadedFeeds AllFeeds
+	var loadedFeeds ConfigData
 	err = json.Unmarshal(byteValue, &loadedFeeds)
 	if err != nil {
 		return errors.New("error: reading feeds.json, please check structure")
 	}
 
-	data.allFeeds = &loadedFeeds
+	data.configData = &loadedFeeds
 	return nil
 }
 
 // LoadFeedData use gofeed library to load data from atom feed
-func (data *Data) loadFeedData(url string, parser FeedParser) error {
-	feedData, err := parser.ParseURL(url)
+func (data *Data) loadFeedData(url string) error {
+	feedData, err := data.parser.ParseURL(url)
 	if err != nil {
 		return errors.New("error loading feed: " + err.Error())
 	}
@@ -121,19 +130,25 @@ func (data *Data) loadFeedData(url string, parser FeedParser) error {
 }
 
 // asynchronously fetch atom feeds and load the data into the interface
-func (data *Data) loadDataFromFeeds(parser FeedParser) error {
-	var configError error
-	configError = data.loadJsonConfig(configFileName)
-	if configError != nil {
-		return configError
+func (data *Data) loadDataFromFeeds() error {
+	if data.configData == nil {
+		panic(errors.New("error attempted to load feed data with no config set"))
 	}
 
-	for i := 0; i < len(data.allFeeds.Feeds); i++ {
-		atomFeedError := data.loadFeedData(data.allFeeds.Feeds[i].URL, parser)
+	for i := 0; i < len(data.configData.Feeds); i++ {
+		atomFeedError := data.loadFeedData(data.configData.Feeds[i].URL)
 		if atomFeedError != nil {
 			return atomFeedError
 		}
 	}
 
 	return nil
+}
+
+// NewData factory method for data objects
+func NewData(parser FeedParser) *Data {
+	safeFeedData := &SafeFeedData{feedData: make(map[string]FeedDataModel)}
+	allFeeds := &ConfigData{}
+	data := &Data{safeFeedData: safeFeedData, configData: allFeeds, parser: parser}
+	return data
 }

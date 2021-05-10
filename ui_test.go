@@ -12,7 +12,7 @@ const testUrlTwo = "google.com"
 
 func TestAppRun(t *testing.T) {
 	app := CreateStubbedApp(false)
-	ui := CreateUI(app)
+	ui := CreateUI(app, nil)
 
 	err := ui.startUILoop()
 	assert.Nil(t, err)
@@ -20,7 +20,7 @@ func TestAppRun(t *testing.T) {
 
 func TestAppFail(t *testing.T) {
 	app := CreateStubbedApp(true)
-	ui := CreateUI(app)
+	ui := CreateUI(app, nil)
 
 	err := ui.startUILoop()
 	assert.NotNil(t, err)
@@ -29,7 +29,7 @@ func TestAppFail(t *testing.T) {
 
 func TestCreateUIInitialUIState(t *testing.T) {
 	app := CreateStubbedApp(true)
-	ui := CreateUI(app)
+	ui := CreateUI(app, nil)
 
 	assert.NotNil(t, ui.feedList)
 	assert.NotNil(t, ui.entriesList)
@@ -50,7 +50,7 @@ func TestCreateUIInitialUIState(t *testing.T) {
 
 func TestCreateUISetupPages(t *testing.T) {
 	app := CreateStubbedApp(true)
-	ui := CreateUI(app)
+	ui := CreateUI(app, nil)
 
 	frontPage, primitive := ui.pages.GetFrontPage()
 	assert.Equal(t, feedPage, frontPage)
@@ -62,7 +62,7 @@ func TestFeedsListContainsFetchingDataOnStartup(t *testing.T){
 	app, simScreen := CreateTestAppWithSimScreen(100, 100)
 	defer simScreen.Fini()
 
-	ui := CreateUI(app)
+	ui := CreateUI(app, nil)
 	ui.feedList.Box.SetRect(50,50,50,50)
 	ui.feedList.Draw(simScreen)
 
@@ -73,10 +73,10 @@ func TestFeedsListContainsFetchingDataOnStartup(t *testing.T){
 
 func TestFeedsListContainsFeedNameAfterLoadingData(t *testing.T) {
 	app := CreateStubbedApp(true)
-	ui := CreateUI(app)
 	data := createTestData()
+	ui := CreateUI(app, data)
 
-	ui.updateInterface(data)
+	ui.updateInterface()
 
 	for _, f := range ui.app.(*StubbedApp).UpdateDraws {
 		f()
@@ -108,9 +108,9 @@ func TestSwitchUIFocus(t *testing.T) {
 func TestLoadEntryTextView(t *testing.T) {
 	data := createTestData()
 	app := CreateStubbedApp(true)
-	ui := CreateUI(app)
+	ui := CreateUI(app, data)
 
-	ui.updateInterface(data)
+	ui.updateInterface()
 
 	for _, f := range ui.app.(*StubbedApp).UpdateDraws {
 		f()
@@ -119,13 +119,13 @@ func TestLoadEntryTextView(t *testing.T) {
 	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[0].content,
 		ui.entryTextView.GetText(true))
 
-	ui.loadEntryTextView(data, 1)
+	ui.loadEntryTextView(1)
 
 	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[1].content,
 		ui.entryTextView.GetText(true))
 
 	ui.feedList.SetCurrentItem(1)
-	ui.loadEntryTextView(data, 0)
+	ui.loadEntryTextView(0)
 
 	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[0].content,
 		ui.entryTextView.GetText(true))
@@ -134,9 +134,9 @@ func TestLoadEntryTextView(t *testing.T) {
 func TestLoadEntriesIntoList(t *testing.T) {
 	data := createTestData()
 	app := CreateStubbedApp(true)
-	ui := CreateUI(app)
+	ui := CreateUI(app, data)
 
-	ui.loadEntriesIntoList(data, testUrlOne)
+	ui.loadEntriesIntoList(testUrlOne)
 
 	for _, f := range ui.app.(*StubbedApp).UpdateDraws {
 		f()
@@ -275,6 +275,15 @@ func TestHandleKeyboardPressRefreshEvents(t *testing.T) {
 
 	screenContentsAsString := getScreenContents(simScreen)
 	assert.Contains(t, screenContentsAsString, "Do you want to refresh feed data?")
+
+	keyEvent = tcell.NewEventKey(tcell.KeyEnter, rune(0), 0)
+	refreshModal.InputHandler()(keyEvent, nil)
+
+	currentFrontPage, _ = ui.pages.GetFrontPage()
+	assert.Equal(t, feedPage, currentFrontPage)
+
+	text, _ := ui.feedList.GetItemText(0)
+	assert.Equal(t, "Fetching Feed Data", text)
 }
 
 func TestUserNavigatesLists(t *testing.T) {
@@ -353,9 +362,9 @@ func TestCreateErrorPage(t *testing.T) {
 
 func setupWithSimScreen(data * Data) (tcell.SimulationScreen, *UI) {
 	app, simScreen := CreateTestAppWithSimScreen(150, 150)
-	ui := CreateUI(app)
+	ui := CreateUI(app, data)
 	if data != nil {
-		ui.loadInitialDataAndListNavigationFunctions(data)()
+		ui.loadInitialDataAndListNavigationFunctions()
 	}
 	return simScreen, ui
 }
@@ -379,8 +388,12 @@ func createTestData() *Data {
 	safeFeedData.SetSiteData(testUrlOne, createFakeFeedDataModel("registry", testUrlOne))
 	safeFeedData.SetSiteData(testUrlTwo, createFakeFeedDataModel("google", testUrlTwo))
 
-	allFeeds := &AllFeeds{[]Feed{{testUrlOne}, {testUrlTwo}}}
-	return &Data{safeFeedData: safeFeedData, allFeeds: allFeeds}
+	allFeeds := &ConfigData{[]Feed{{testUrlOne}, {testUrlTwo}}}
+
+	fakeFeed := CreateTestFeed()
+	parser := createStubbedParser(&fakeFeed, false)
+
+	return &Data{safeFeedData: safeFeedData, configData: allFeeds, parser: parser}
 }
 
 func createFakeFeedDataModel(name, url string) FeedDataModel {

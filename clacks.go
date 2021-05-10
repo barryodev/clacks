@@ -15,33 +15,19 @@ func (BrowserLauncher) OpenDefault(fileOrURL string) error {
 	return osx.OpenDefault(fileOrURL)
 }
 
-func LoadAllFeedDataAndUpdateInterface(ui *UI, data *Data){
-	defer func() {
-		if r := recover(); r != nil {
-			err := r.(error)
-			ui.app.QueueUpdateDraw(func() {
-				ui.createErrorPage(err.Error())
-			})
-		}
-	}()
-
-	fp := gofeed.NewParser()
-	fp.UserAgent = "Clacks - Terminal Atom Reader"
-
-	data.loadDataFromFeeds(fp)
-	ui.updateInterface(data)
-}
-
 func main() {
 	// init threadsafe feed data
-	safeFeedData := &SafeFeedData{feedData: make(map[string]FeedDataModel)}
-	allFeeds := &AllFeeds{}
-
-	data := &Data{safeFeedData: safeFeedData, allFeeds: allFeeds}
+	fp := gofeed.NewParser()
+	fp.UserAgent = "Clacks - Terminal Atom Reader"
+	data := NewData(fp)
+	err := data.loadJsonConfig(configFileName)
+	if err != nil {
+		panic(err)
+	}
 
 	// init ui elements
 	app := tview.NewApplication()
-	ui := CreateUI(app)
+	ui := CreateUI(app, data)
 
 	// Set Browser launcher
 	ui.browserLauncher = BrowserLauncher{}
@@ -49,9 +35,9 @@ func main() {
 	ui.setInputCaptureHandler()
 
 	// async call to load feed data
-	go LoadAllFeedDataAndUpdateInterface(ui, data)
+	go ui.loadAllFeedDataAndUpdateInterface()
 
-	err := ui.startUILoop()
+	err = ui.startUILoop()
 	if err != nil {
 		panic(err)
 	}

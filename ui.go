@@ -20,6 +20,7 @@ const quitMenuRegion = "quit"
 // UI tview ui elements
 type UI struct {
 	app 			TermApplication
+	data			*Data
 	browserLauncher BrowserLauncherInterface
 	feedList		*tview.List
 	entriesList 	*tview.List
@@ -43,9 +44,10 @@ type TermApplication interface {
 }
 
 // CreateUI create and configure all ui elements for app start up
-func CreateUI(app TermApplication) *UI {
+func CreateUI(app TermApplication, data *Data) *UI {
 	ui := &UI{}
 	ui.app = app
+	ui.data = data
 
 	ui.feedList = tview.NewList().ShowSecondaryText(false)
 	ui.feedList.SetBorder(true).SetTitle("Feeds")
@@ -92,6 +94,25 @@ func CreateUI(app TermApplication) *UI {
 	return ui
 }
 
+// load
+func (ui *UI) loadAllFeedDataAndUpdateInterface(){
+	defer func() {
+		if r := recover(); r != nil {
+			err := r.(error)
+			ui.app.QueueUpdateDraw(func() {
+				ui.createErrorPage(err.Error())
+			})
+		}
+	}()
+
+	ui.data.safeFeedData.Clear()
+	err := ui.data.loadDataFromFeeds()
+	if err != nil {
+		panic(err)
+	}
+	ui.updateInterface()
+}
+
 // start ui run loop
 func (ui *UI) startUILoop() error {
 	err := ui.app.Run()
@@ -102,44 +123,42 @@ func (ui *UI) startUILoop() error {
 }
 
 // Using QueueUpdateDraw as its a threadsafe way to update tview primitives
-func (ui *UI) updateInterface(data *Data) {
-	ui.app.QueueUpdateDraw(ui.loadInitialDataAndListNavigationFunctions(data))
+func (ui *UI) updateInterface() {
+	ui.app.QueueUpdateDraw(ui.loadInitialDataAndListNavigationFunctions)
 }
 
 // load data into list and setup functions to handle user navigating list
-func (ui *UI) loadInitialDataAndListNavigationFunctions(data *Data) func() {
-	return func() {
-		ui.feedList.Clear()
-		// add items to feed list
-		for _, feed := range data.allFeeds.Feeds {
-			feedData := data.safeFeedData.GetEntries(feed.URL)
-			ui.feedList.AddItem(feedData.name, feed.URL, 0, func() {
-				// handle user selecting item by moving focus to entry list
-				ui.switchAppFocus(ui.entriesList.Box, ui.feedList.Box, ui.entriesList)
-			})
-		}
-
-		// handle user changing selected feed item by loading entries list
-		ui.feedList.SetChangedFunc(func(i int, feedName string, url string, shortcut rune) {
-			ui.loadEntriesIntoList(data, url)
+func (ui *UI) loadInitialDataAndListNavigationFunctions(){
+	ui.feedList.Clear()
+	// add items to feed list
+	for _, feed := range ui.data.configData.Feeds {
+		feedData := ui.data.safeFeedData.GetEntries(feed.URL)
+		ui.feedList.AddItem(feedData.name, feed.URL, 0, func() {
+			// handle user selecting item by moving focus to entry list
+			ui.switchAppFocus(ui.entriesList.Box, ui.feedList.Box, ui.entriesList)
 		})
+	}
 
-		// handle user changing selected item of entries list by loading entry text view
-		ui.entriesList.SetChangedFunc(func(i int, entryName string, secondaryText string, shortcut rune) {
-			ui.loadEntryTextView(data, i)
-		})
+	// handle user changing selected feed item by loading entries list
+	ui.feedList.SetChangedFunc(func(i int, feedName string, url string, shortcut rune) {
+		ui.loadEntriesIntoList(url)
+	})
 
-		// when user hits escape in entries list, move focus back to feed list
-		ui.entriesList.SetDoneFunc(func() {
-			ui.switchAppFocus(ui.feedList.Box, ui.entriesList.Box, ui.feedList)
-		})
+	// handle user changing selected item of entries list by loading entry text view
+	ui.entriesList.SetChangedFunc(func(i int, entryName string, secondaryText string, shortcut rune) {
+		ui.loadEntryTextView(i)
+	})
 
-		// load initial state of interface
-		ui.loadEntriesIntoList(data, ui.getSelectedFeedUrl())
-		//make sure there's at least one entry in selected
-		if len(data.safeFeedData.GetEntries(ui.getSelectedFeedUrl()).entries) > 0 {
-			ui.loadEntryTextView(data, 0)
-		}
+	// when user hits escape in entries list, move focus back to feed list
+	ui.entriesList.SetDoneFunc(func() {
+		ui.switchAppFocus(ui.feedList.Box, ui.entriesList.Box, ui.feedList)
+	})
+
+	// load initial state of interface
+	ui.loadEntriesIntoList(ui.getSelectedFeedUrl())
+	//make sure there's at least one entry in selected
+	if len(ui.data.safeFeedData.GetEntries(ui.getSelectedFeedUrl()).entries) > 0 {
+		ui.loadEntryTextView(0)
 	}
 
 }
@@ -151,9 +170,9 @@ func (ui *UI) switchAppFocus(newBox *tview.Box, oldBox *tview.Box, newFocus tvie
 }
 
 // Looks up the text of the corresponding entry and sets it on the text view
-func (ui *UI) loadEntryTextView(data *Data, i int) {
+func (ui *UI) loadEntryTextView(i int) {
 	ui.entryTextView.Clear()
-	feedData := data.safeFeedData.GetEntries(ui.getSelectedFeedUrl())
+	feedData := ui.data.safeFeedData.GetEntries(ui.getSelectedFeedUrl())
 	if feedData.entries != nil {
 		ui.entryTextView.SetText(feedData.entries[i].content)
 	}
@@ -166,9 +185,9 @@ func (ui *UI) getSelectedFeedUrl() string {
 }
 
 // Send the entries for the selected feed into the entry list
-func (ui *UI) loadEntriesIntoList(data *Data, url string) {
+func (ui *UI) loadEntriesIntoList(url string) {
 	ui.entriesList.Clear()
-	feedData := data.safeFeedData.GetEntries(url)
+	feedData := ui.data.safeFeedData.GetEntries(url)
 	for _, entry := range feedData.entries {
 		ui.entriesList.AddItem(entry.title, entry.url, 0, func() {
 			// when an item in the entry list is selected, open the link in the browser
@@ -284,10 +303,7 @@ func (ui *UI) createRefreshPage() {
 		func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Yes" {
 				ui.setUITextToFetchingData()
-				safeFeedData := &SafeFeedData{feedData: make(map[string]FeedDataModel)}
-				allFeeds := &AllFeeds{}
-				data := &Data{safeFeedData: safeFeedData, allFeeds: allFeeds}
-				go LoadAllFeedDataAndUpdateInterface(ui, data)
+				go ui.loadAllFeedDataAndUpdateInterface()
 			}
 			ui.pages.SwitchToPage(feedPage)
 			ui.pages.RemovePage(refreshPage)
