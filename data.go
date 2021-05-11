@@ -5,6 +5,7 @@ import (
 	"errors"
 	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/mmcdole/gofeed"
+	"io"
 
 	"html"
 	"io/ioutil"
@@ -79,28 +80,45 @@ func (c *SafeFeedData) Clear() {
 }
 
 // LoadJsonConfig load feeds from json file
-func (data *Data) loadJsonConfig(config string) error {
+func (data *Data) loadJsonConfig(fileName string) error {
 	//open config file
-	configFile, err := os.Open(config)
-	if err != nil {
-		return errors.New("error: could not find feeds.json config file")
+	configFile, fileError := openConfigFile(fileName)
+	if fileError != nil {
+		return fileError
 	}
 
+	config, parseError := parseConfig(configFile)
+	if parseError != nil {
+		return parseError
+	} else {
+		data.configData = config
+		return nil
+	}
+}
+
+func parseConfig(r io.Reader) (*ConfigData, error) {
 	//load data from file
-	byteValue, err := ioutil.ReadAll(configFile)
+	byteValue, err := ioutil.ReadAll(r)
 	if err != nil {
-		return errors.New("Error Reading from feeds.json file: " + err.Error())
+		return nil, errors.New("error reading from feeds.json file " + err.Error())
 	}
 
 	//unmarshall json
 	var loadedFeeds ConfigData
 	err = json.Unmarshal(byteValue, &loadedFeeds)
 	if err != nil {
-		return errors.New("error: reading feeds.json, please check structure")
+		return nil, errors.New("error reading feeds.json, please check structure")
 	}
 
-	data.configData = &loadedFeeds
-	return nil
+	return &loadedFeeds, nil
+}
+
+func openConfigFile(fileName string) (*os.File, error) {
+	configFile, err := os.Open(fileName)
+	if err != nil {
+		return nil, errors.New("error: could not find feeds.json config file")
+	}
+	return configFile, err
 }
 
 // LoadFeedData use gofeed library to load data from atom feed
@@ -123,16 +141,15 @@ func (data *Data) loadFeedData(url string) error {
 		feedDataModel := FeedDataModel{name: feedName, entries: entrySlice}
 		data.safeFeedData.SetSiteData(url, feedDataModel)
 		return nil
+	} else {
+		return errors.New("error feed at url: " + url + " has no entries")
 	}
-
-	//TODO handle feed having no entries
-	return nil
 }
 
 // asynchronously fetch atom feeds and load the data into the interface
 func (data *Data) loadDataFromFeeds() error {
-	if data.configData == nil {
-		panic(errors.New("error attempted to load feed data with no config set"))
+	if data.configData == nil || len(data.configData.Feeds) == 0 {
+		return errors.New("error attempted to load feed data with no config set")
 	}
 
 	for i := 0; i < len(data.configData.Feeds); i++ {

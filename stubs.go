@@ -108,16 +108,33 @@ func createStubbedParser(fakeFeed *gofeed.Feed, withError bool) FeedParser {
 // ParseURL stub
 func (parser *StubbedParser) ParseURL(_ string) (feed *gofeed.Feed, err error) {
 	if parser.withError {
-		return nil, errors.New("parser error")
+		return nil, errors.New("stubbed parser error")
 	} else {
 		return parser.fakeFeed, nil
 	}
 }
 
-type StubbedBrowserLauncher struct {}
+type StubbedBrowserLauncher struct {
+	withError bool
+}
 
-func (StubbedBrowserLauncher) OpenDefault(_ string) error {
+func (sbl StubbedBrowserLauncher) OpenDefault(_ string) error {
+	if sbl.withError {
+		return errors.New("stubbed browser launcher error")
+	}
 	return nil
+}
+
+// StubbedBuffer stub for buffer to get ioutils.readall to throw an error
+type StubbedBuffer struct {
+}
+
+func (mb StubbedBuffer) Close() error {
+	return nil
+}
+
+func (mb StubbedBuffer) Read(p []byte) (n int, err error) {
+	return 0, errors.New("stubbed buffer error")
 }
 
 

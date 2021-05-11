@@ -149,6 +149,30 @@ func TestLoadEntriesIntoList(t *testing.T) {
 	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[1].title, secondItemText)
 }
 
+func TestBrowserLauncherCausesPanic(t *testing.T)  {
+	data := createTestData(false)
+	simScreen, ui := setupWithSimScreen(data)
+	defer simScreen.Fini()
+
+	ui.setInputCaptureHandler()
+	ui.setupLists()
+
+	ui.browserLauncher = StubbedBrowserLauncher{withError: true}
+
+	assert.Equal(t, ui.feedList, ui.app.GetFocus())
+
+	keyEvent := tcell.NewEventKey(tcell.KeyEnter, rune(0), 0)
+	ui.entriesList.InputHandler()(keyEvent, nil)
+
+	frontPage, openModal := ui.pages.GetFrontPage()
+	assert.Equal(t, frontPage, openBrowserPage)
+
+	castModal, ok := openModal.(*tview.Modal)
+	assert.True(t, ok)
+
+	assert.Panics(t, func(){ castModal.InputHandler()(keyEvent, nil) })
+}
+
 func TestHandleKeyboardPressQuitEvents(t *testing.T) {
 	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
@@ -341,7 +365,7 @@ func TestUserSelectingItemInEntriesList(t *testing.T) {
 	button, ok := ui.app.GetFocus().(*tview.Button)
 	assert.True(t, ok)
 
-	ui.browserLauncher = StubbedBrowserLauncher{}
+	ui.browserLauncher = StubbedBrowserLauncher{withError: false}
 
 	assert.Equal(t, "Yes", button.GetLabel())
 	keyEvent = tcell.NewEventKey(tcell.KeyEnter, rune(0), 0)
