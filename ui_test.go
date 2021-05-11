@@ -73,7 +73,7 @@ func TestFeedsListContainsFetchingDataOnStartup(t *testing.T){
 
 func TestFeedsListContainsFeedNameAfterLoadingData(t *testing.T) {
 	app := CreateStubbedApp(true)
-	data := createTestData()
+	data := createTestData(false)
 	ui := CreateUI(app, data)
 
 	ui.updateInterface()
@@ -90,7 +90,7 @@ func TestFeedsListContainsFeedNameAfterLoadingData(t *testing.T) {
 }
 
 func TestSwitchUIFocus(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
@@ -106,7 +106,7 @@ func TestSwitchUIFocus(t *testing.T) {
 }
 
 func TestLoadEntryTextView(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	app := CreateStubbedApp(true)
 	ui := CreateUI(app, data)
 
@@ -132,7 +132,7 @@ func TestLoadEntryTextView(t *testing.T) {
 }
 
 func TestLoadEntriesIntoList(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	app := CreateStubbedApp(true)
 	ui := CreateUI(app, data)
 
@@ -150,7 +150,7 @@ func TestLoadEntriesIntoList(t *testing.T) {
 }
 
 func TestHandleKeyboardPressQuitEvents(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 
 	currentFrontPage, _ := ui.pages.GetFrontPage()
@@ -160,8 +160,9 @@ func TestHandleKeyboardPressQuitEvents(t *testing.T) {
 	currentlyHighlighted := ui.menuTextView.GetHighlights()
 	assert.Nil(t, currentlyHighlighted)
 
+	ui.setInputCaptureHandler()
 	keyEvent := tcell.NewEventKey(tcell.KeyRune, 'q', 0)
-	ui.handleKeyboardPressEvents(keyEvent)
+	ui.app.GetInputCapture()(keyEvent)
 
 	quitFrontPage, quitModal := ui.pages.GetFrontPage()
 	assert.Equal(t, quitPage, quitFrontPage)
@@ -188,12 +189,13 @@ func TestHandleKeyboardPressQuitEvents(t *testing.T) {
 }
 
 func TestQuitMenuCancelButtonPress(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
+	ui.setInputCaptureHandler()
 	keyEvent := tcell.NewEventKey(tcell.KeyRune, 'q', 0)
-	ui.handleKeyboardPressEvents(keyEvent)
+	ui.app.GetInputCapture()(keyEvent)
 
 	quitFrontPage, quitModal := ui.pages.GetFrontPage()
 	assert.Equal(t, quitPage, quitFrontPage)
@@ -212,7 +214,7 @@ func TestQuitMenuCancelButtonPress(t *testing.T) {
 }
 
 func TestHandleKeyboardPressHelpEvents(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
@@ -223,8 +225,9 @@ func TestHandleKeyboardPressHelpEvents(t *testing.T) {
 	currentlyHighlighted := ui.menuTextView.GetHighlights()
 	assert.Nil(t, currentlyHighlighted)
 
+	ui.setInputCaptureHandler()
 	keyEvent := tcell.NewEventKey(tcell.KeyRune, 'h', 0)
-	ui.handleKeyboardPressEvents(keyEvent)
+	ui.app.GetInputCapture()(keyEvent)
 
 	helpFrontPage, helpModal := ui.pages.GetFrontPage()
 	assert.Equal(t, helpPage, helpFrontPage)
@@ -250,7 +253,7 @@ func TestHandleKeyboardPressHelpEvents(t *testing.T) {
 }
 
 func TestHandleKeyboardPressRefreshEvents(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
@@ -260,8 +263,9 @@ func TestHandleKeyboardPressRefreshEvents(t *testing.T) {
 	currentlyHighlighted := ui.menuTextView.GetHighlights()
 	assert.Nil(t, currentlyHighlighted)
 
+	ui.setInputCaptureHandler()
 	keyEvent := tcell.NewEventKey(tcell.KeyRune, 'r', 0)
-	ui.handleKeyboardPressEvents(keyEvent)
+	ui.app.GetInputCapture()(keyEvent)
 
 	refreshFrontPage, refreshModal := ui.pages.GetFrontPage()
 	assert.Equal(t, refreshPage, refreshFrontPage)
@@ -287,7 +291,7 @@ func TestHandleKeyboardPressRefreshEvents(t *testing.T) {
 }
 
 func TestUserNavigatesLists(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
@@ -303,7 +307,7 @@ func TestUserNavigatesLists(t *testing.T) {
 }
 
 func TestUserSelectingItemInFeedListAndLeavingEntriesList(t *testing.T){
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
@@ -321,7 +325,7 @@ func TestUserSelectingItemInFeedListAndLeavingEntriesList(t *testing.T){
 }
 
 func TestUserSelectingItemInEntriesList(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
 
@@ -347,9 +351,8 @@ func TestUserSelectingItemInEntriesList(t *testing.T) {
 }
 
 func TestCreateErrorPage(t *testing.T) {
-	data := createTestData()
+	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
-	defer simScreen.Fini()
 
 	errorModal := ui.createErrorPage("test error")
 
@@ -358,13 +361,53 @@ func TestCreateErrorPage(t *testing.T) {
 
 	screenContentsAsString := getScreenContents(simScreen)
 	assert.Contains(t, screenContentsAsString, "test error")
+
+	button, ok := ui.app.GetFocus().(*tview.Button)
+	assert.True(t, ok)
+
+	assert.Equal(t, "Okay", button.GetLabel())
+	keyEvent := tcell.NewEventKey(tcell.KeyEnter, rune(0), 0)
+	button.InputHandler()(keyEvent, nil)
+
+	contents, _, _ := simScreen.GetContents()
+	assert.Nil(t, contents)
+}
+
+func TestLoadAllFeedDataAndUpdateInterface(t *testing.T) {
+	data := createTestData(false)
+	app := CreateStubbedApp(true)
+	ui := CreateUI(app, data)
+
+	ui.loadAllFeedDataAndUpdateInterface()
+
+	for _, f := range ui.app.(*StubbedApp).UpdateDraws {
+		f()
+	}
+
+	feedTitle, _ := ui.feedList.GetItemText(0)
+	assert.Equal(t, "Test Feed Title From Parser", feedTitle)
+}
+
+func TestLoadAllFeedDataAndUpdateInterfaceWithError(t *testing.T) {
+	data := createTestData(true)
+	app := CreateStubbedApp(true)
+	ui := CreateUI(app, data)
+
+	ui.loadAllFeedDataAndUpdateInterface()
+
+	for _, f := range ui.app.(*StubbedApp).UpdateDraws {
+		f()
+	}
+
+	pageName, _ := ui.pages.GetFrontPage()
+	assert.Equal(t, errorPage, pageName)
 }
 
 func setupWithSimScreen(data * Data) (tcell.SimulationScreen, *UI) {
 	app, simScreen := CreateTestAppWithSimScreen(150, 150)
 	ui := CreateUI(app, data)
 	if data != nil {
-		ui.loadInitialDataAndListNavigationFunctions()
+		ui.setupLists()
 	}
 	return simScreen, ui
 }
@@ -383,7 +426,7 @@ func getScreenContents(simScreen tcell.SimulationScreen) string {
 	return screenContentsAsString
 }
 
-func createTestData() *Data {
+func createTestData(withError bool) *Data {
 	safeFeedData := &SafeFeedData{feedData: make(map[string]FeedDataModel)}
 	safeFeedData.SetSiteData(testUrlOne, createFakeFeedDataModel("registry", testUrlOne))
 	safeFeedData.SetSiteData(testUrlTwo, createFakeFeedDataModel("google", testUrlTwo))
@@ -391,7 +434,7 @@ func createTestData() *Data {
 	allFeeds := &ConfigData{[]Feed{{testUrlOne}, {testUrlTwo}}}
 
 	fakeFeed := CreateTestFeed()
-	parser := createStubbedParser(&fakeFeed, false)
+	parser := createStubbedParser(&fakeFeed, withError)
 
 	return &Data{safeFeedData: safeFeedData, configData: allFeeds, parser: parser}
 }

@@ -12,6 +12,7 @@ const feedPage = "feedsPage"
 const helpPage = "helpPage"
 const quitPage = "quitPage"
 const refreshPage = "refreshPage"
+const errorPage = "errorPage"
 const openBrowserPage = "open"
 const refreshMenuRegion = "refresh"
 const helpMenuRegion = "help"
@@ -41,6 +42,7 @@ type TermApplication interface {
 	SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Application
 	QueueUpdateDraw(f func()) *tview.Application
 	GetFocus() tview.Primitive
+	GetInputCapture() func(event *tcell.EventKey) *tcell.EventKey
 }
 
 // CreateUI create and configure all ui elements for app start up
@@ -124,11 +126,11 @@ func (ui *UI) startUILoop() error {
 
 // Using QueueUpdateDraw as its a threadsafe way to update tview primitives
 func (ui *UI) updateInterface() {
-	ui.app.QueueUpdateDraw(ui.loadInitialDataAndListNavigationFunctions)
+	ui.app.QueueUpdateDraw(ui.setupLists)
 }
 
 // load data into list and setup functions to handle user navigating list
-func (ui *UI) loadInitialDataAndListNavigationFunctions(){
+func (ui *UI) setupLists(){
 	ui.feedList.Clear()
 	// add items to feed list
 	for _, feed := range ui.data.configData.Feeds {
@@ -241,7 +243,7 @@ func (ui *UI) handleKeyboardPressEvents(event *tcell.EventKey) *tcell.EventKey {
 
 // create modal box displaying error message after panic and quit app
 func (ui *UI) createErrorPage(errorMessage string) *tview.Modal {
-	errorBox := ui.createOverlayModal(helpPage, errorMessage, []string{"Okay"},
+	errorBox := ui.createOverlayModal(errorPage, errorMessage, []string{"Okay"},
 		func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Okay" {
 				ui.app.Stop()

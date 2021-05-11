@@ -86,6 +86,11 @@ func (app *StubbedApp) QueueUpdateDraw(f func()) *tview.Application {
 	return nil
 }
 
+// GetInputCapture does nothing
+func (app *StubbedApp) GetInputCapture() func(event *tcell.EventKey) *tcell.EventKey {
+	return nil
+}
+
 type StubbedParser struct {
 	fakeFeed	*gofeed.Feed
 	withError	bool
