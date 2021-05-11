@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	strip "github.com/grokify/html-strip-tags-go"
-	"github.com/mmcdole/gofeed"
 	"io"
 
 	"html"
@@ -19,10 +18,6 @@ type Data struct {
 	safeFeedData	*SafeFeedData
 	configData		*ConfigData
 	parser			FeedParser
-}
-
-type FeedParser interface {
-	ParseURL(feedURL string) (feed *gofeed.Feed, err error)
 }
 
 const configFileName = "feeds.json"

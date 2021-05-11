@@ -27,7 +27,6 @@ func CreateTestAppWithSimScreen(width, height int) (*tview.Application, tcell.Si
 type StubbedApp struct {
 	FailRun     bool
 	UpdateDraws []func()
-	focus		tview.Primitive
 	mutex       *sync.Mutex
 }
 
@@ -44,7 +43,7 @@ func CreateStubbedApp(failRun bool) TermApplication {
 // Run does nothing
 func (app *StubbedApp) Run() error {
 	if app.FailRun {
-		return errors.New("fail")
+		return errors.New("stubbed ui error")
 	}
 	return nil
 }
@@ -64,12 +63,11 @@ func (app *StubbedApp) Draw() *tview.Application {
 
 // GetFocus does nothing
 func (app *StubbedApp) GetFocus() tview.Primitive {
-	return app.focus
+	return nil
 }
 
 // SetFocus does nothing
 func (app *StubbedApp) SetFocus(p tview.Primitive) *tview.Application {
-	app.focus = p
 	return nil
 }
 
@@ -129,9 +127,6 @@ func (sbl StubbedBrowserLauncher) OpenDefault(_ string) error {
 type StubbedBuffer struct {
 }
 
-func (mb StubbedBuffer) Close() error {
-	return nil
-}
 
 func (mb StubbedBuffer) Read(p []byte) (n int, err error) {
 	return 0, errors.New("stubbed buffer error")

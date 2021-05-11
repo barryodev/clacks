@@ -32,19 +32,6 @@ type UI struct {
 	pages			*tview.Pages
 }
 
-// TermApplication interface for the terminal UI app
-type TermApplication interface {
-	Run() error
-	Draw() *tview.Application
-	Stop()
-	SetRoot(root tview.Primitive, fullscreen bool) *tview.Application
-	SetFocus(p tview.Primitive) *tview.Application
-	SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Application
-	QueueUpdateDraw(f func()) *tview.Application
-	GetFocus() tview.Primitive
-	GetInputCapture() func(event *tcell.EventKey) *tcell.EventKey
-}
-
 // CreateUI create and configure all ui elements for app start up
 func CreateUI(app TermApplication, data *Data) *UI {
 	ui := &UI{}

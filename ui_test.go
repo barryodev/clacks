@@ -24,7 +24,7 @@ func TestAppFail(t *testing.T) {
 
 	err := ui.startUILoop()
 	assert.NotNil(t, err)
-	assert.Equal(t, "fail", err.Error())
+	assert.Equal(t, "stubbed ui error", err.Error())
 }
 
 func TestCreateUIInitialUIState(t *testing.T) {
