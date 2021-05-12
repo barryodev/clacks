@@ -233,7 +233,7 @@ func TestQuitMenuCancelButtonPress(t *testing.T) {
 	keyEvent = tcell.NewEventKey(tcell.KeyEnter, rune(0), 0)
 	castModal.InputHandler()(keyEvent, nil)
 
-	quitFrontPage, quitModal = ui.pages.GetFrontPage()
+	quitFrontPage, _ = ui.pages.GetFrontPage()
 	assert.Equal(t, feedPage, quitFrontPage)
 }
 

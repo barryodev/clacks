@@ -1,6 +1,7 @@
 # clacks
 [![Build Status](https://api.travis-ci.com/barryodev/clacks.svg?branch=main)](https://travis-ci.com/github/barryodev/clacks)
 [![codecov](https://codecov.io/gh/barryodev/clacks/branch/main/graph/badge.svg)](https://app.codecov.io/gh/barryodev/clacks)
+[![Go Report Card](https://goreportcard.com/badge/github.com/barryodev/clacks)](https://goreportcard.com/report/github.com/barryodev/clacks)
 
 A Terminal Based Atom/RSS Reader that reads a list of feeds from a json file and displays them, once selected a feed entry can be opened in the browser.
 
