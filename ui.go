@@ -20,16 +20,16 @@ const quitMenuRegion = "quit"
 
 // UI tview ui elements
 type UI struct {
-	app 			TermApplication
-	data			*Data
+	app             TermApplication
+	data            *Data
 	browserLauncher BrowserLauncherInterface
-	feedList		*tview.List
-	entriesList 	*tview.List
-	entryTextView 	*tview.TextView
-	flex			*tview.Flex
-	menuTextView	*tview.TextView
-	previousFocus	tview.Primitive
-	pages			*tview.Pages
+	feedList        *tview.List
+	entriesList     *tview.List
+	entryTextView   *tview.TextView
+	flex            *tview.Flex
+	menuTextView    *tview.TextView
+	previousFocus   tview.Primitive
+	pages           *tview.Pages
 }
 
 // CreateUI create and configure all ui elements for app start up
@@ -84,7 +84,7 @@ func CreateUI(app TermApplication, data *Data) *UI {
 }
 
 // load
-func (ui *UI) loadAllFeedDataAndUpdateInterface(){
+func (ui *UI) loadAllFeedDataAndUpdateInterface() {
 	defer func() {
 		if r := recover(); r != nil {
 			err := r.(error)
@@ -117,7 +117,7 @@ func (ui *UI) updateInterface() {
 }
 
 // load data into list and setup functions to handle user navigating list
-func (ui *UI) setupLists(){
+func (ui *UI) setupLists() {
 	ui.feedList.Clear()
 	// add items to feed list
 	for _, feed := range ui.data.configData.Feeds {

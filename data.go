@@ -15,9 +15,9 @@ import (
 
 // Data struct holding config and feed data
 type Data struct {
-	safeFeedData	*SafeFeedData
-	configData		*ConfigData
-	parser			FeedParser
+	safeFeedData *SafeFeedData
+	configData   *ConfigData
+	parser       FeedParser
 }
 
 const configFileName = "feeds.json"
@@ -33,14 +33,14 @@ type Feed struct {
 
 // Entry struct describes a single item in an atom feed
 type Entry struct {
-	title 	string
+	title   string
 	content string
-	url		string
+	url     string
 }
 
 // FeedDataModel struct of an feed title and slice of entries
 type FeedDataModel struct {
-	name string
+	name    string
 	entries []Entry
 }
 
@@ -128,9 +128,9 @@ func (data *Data) loadFeedData(url string) error {
 		entrySlice := make([]Entry, len(feedData.Items))
 		for i, item := range feedData.Items {
 			entrySlice[i] = Entry{
-				title: html.UnescapeString(strip.StripTags(item.Title)),
+				title:   html.UnescapeString(strip.StripTags(item.Title)),
 				content: strings.TrimSpace(html.UnescapeString(strip.StripTags(item.Description))),
-				url: item.Link,
+				url:     item.Link,
 			}
 		}
 		feedDataModel := FeedDataModel{name: feedName, entries: entrySlice}

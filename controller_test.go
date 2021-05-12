@@ -34,7 +34,7 @@ func TestStartUPLoopWithStubbedInterfaces(t *testing.T) {
 
 	assert.Eventually(t, func() bool { return controllerWithStubs.ui != nil }, time.Second, 10*time.Millisecond)
 
-	assert.Eventually(t, func() bool { return len(controllerWithStubs.ui.data.configData.Feeds) == 4}, time.Second, 10*time.Millisecond)
+	assert.Eventually(t, func() bool { return len(controllerWithStubs.ui.data.configData.Feeds) == 4 }, time.Second, 10*time.Millisecond)
 
 	for _, f := range controllerWithStubs.ui.app.(*StubbedApp).UpdateDraws {
 		f()
@@ -53,7 +53,7 @@ func TestStartUPLoopWithConfigError(t *testing.T) {
 
 	controllerWithStubs := Controller{app, parser, browserLauncherStub, nil, ""}
 
-	assert.PanicsWithError(t, "error: could not find feeds.json config file", func(){ controllerWithStubs.setupAndLaunchUILoop()})
+	assert.PanicsWithError(t, "error: could not find feeds.json config file", func() { controllerWithStubs.setupAndLaunchUILoop() })
 
 }
 
@@ -67,6 +67,6 @@ func TestStartUPLoopWithUIError(t *testing.T) {
 
 	controllerWithStubs := Controller{app, parser, browserLauncherStub, nil, configFileName}
 
-	assert.PanicsWithError(t, "stubbed ui error", func(){ controllerWithStubs.setupAndLaunchUILoop()})
+	assert.PanicsWithError(t, "stubbed ui error", func() { controllerWithStubs.setupAndLaunchUILoop() })
 
 }

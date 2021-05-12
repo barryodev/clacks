@@ -58,12 +58,12 @@ func TestCreateUISetupPages(t *testing.T) {
 	assert.Equal(t, ui.flex, primitive)
 }
 
-func TestFeedsListContainsFetchingDataOnStartup(t *testing.T){
+func TestFeedsListContainsFetchingDataOnStartup(t *testing.T) {
 	app, simScreen := CreateTestAppWithSimScreen(100, 100)
 	defer simScreen.Fini()
 
 	ui := CreateUI(app, nil)
-	ui.feedList.Box.SetRect(50,50,50,50)
+	ui.feedList.Box.SetRect(50, 50, 50, 50)
 	ui.feedList.Draw(simScreen)
 
 	screenContentsAsString := getScreenContents(simScreen)
@@ -149,7 +149,7 @@ func TestLoadEntriesIntoList(t *testing.T) {
 	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[1].title, secondItemText)
 }
 
-func TestBrowserLauncherCausesPanic(t *testing.T)  {
+func TestBrowserLauncherCausesPanic(t *testing.T) {
 	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
@@ -170,7 +170,7 @@ func TestBrowserLauncherCausesPanic(t *testing.T)  {
 	castModal, ok := openModal.(*tview.Modal)
 	assert.True(t, ok)
 
-	assert.Panics(t, func(){ castModal.InputHandler()(keyEvent, nil) })
+	assert.Panics(t, func() { castModal.InputHandler()(keyEvent, nil) })
 }
 
 func TestHandleKeyboardPressQuitEvents(t *testing.T) {
@@ -195,7 +195,7 @@ func TestHandleKeyboardPressQuitEvents(t *testing.T) {
 	assert.Equal(t, quitMenuRegion, currentlyHighlighted[0])
 
 	assert.NotNil(t, quitModal)
-	ui.feedList.Box.SetRect(0,0,100,100)
+	ui.feedList.Box.SetRect(0, 0, 100, 100)
 	quitModal.Draw(simScreen)
 	simScreen.Show()
 
@@ -260,7 +260,7 @@ func TestHandleKeyboardPressHelpEvents(t *testing.T) {
 	assert.Equal(t, helpMenuRegion, currentlyHighlighted[0])
 
 	assert.NotNil(t, helpModal)
-	ui.feedList.Box.SetRect(0,0,150,150)
+	ui.feedList.Box.SetRect(0, 0, 150, 150)
 	helpModal.Draw(simScreen)
 	simScreen.Show()
 
@@ -330,7 +330,7 @@ func TestUserNavigatesLists(t *testing.T) {
 	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[1].content, ui.entryTextView.GetText(true))
 }
 
-func TestUserSelectingItemInFeedListAndLeavingEntriesList(t *testing.T){
+func TestUserSelectingItemInFeedListAndLeavingEntriesList(t *testing.T) {
 	data := createTestData(false)
 	simScreen, ui := setupWithSimScreen(data)
 	defer simScreen.Fini()
@@ -427,7 +427,7 @@ func TestLoadAllFeedDataAndUpdateInterfaceWithError(t *testing.T) {
 	assert.Equal(t, errorPage, pageName)
 }
 
-func setupWithSimScreen(data * Data) (tcell.SimulationScreen, *UI) {
+func setupWithSimScreen(data *Data) (tcell.SimulationScreen, *UI) {
 	app, simScreen := CreateTestAppWithSimScreen(150, 150)
 	ui := CreateUI(app, data)
 	if data != nil {

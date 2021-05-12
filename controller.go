@@ -7,14 +7,12 @@ import (
 	"github.com/rivo/tview"
 )
 
-
-
 type Controller struct {
-	app 			TermApplication
-	feedParser		FeedParser
+	app             TermApplication
+	feedParser      FeedParser
 	browserLauncher BrowserLauncherInterface
-	ui				*UI
-	configFileName	string
+	ui              *UI
+	configFileName  string
 }
 
 // TermApplication interface for the terminal UI app
@@ -35,7 +33,7 @@ type BrowserLauncherInterface interface {
 	OpenDefault(fileOrURL string) error
 }
 
-type BrowserLauncher struct {}
+type BrowserLauncher struct{}
 
 func (BrowserLauncher) OpenDefault(fileOrURL string) error {
 	return osx.OpenDefault(fileOrURL)
@@ -44,17 +42,16 @@ func (BrowserLauncher) OpenDefault(fileOrURL string) error {
 // FeedParser interface to gofeed library for parsing atom/rss feeds
 type FeedParser interface {
 	ParseURL(feedURL string) (feed *gofeed.Feed, err error)
-
 }
 
 func NewController() *Controller {
 	feedParser := gofeed.NewParser()
 	feedParser.UserAgent = "Clacks - Terminal Atom/RSS Reader"
 	return &Controller{
-		app: tview.NewApplication(),
-		feedParser: feedParser,
+		app:             tview.NewApplication(),
+		feedParser:      feedParser,
 		browserLauncher: BrowserLauncher{},
-		configFileName: configFileName}
+		configFileName:  configFileName}
 }
 
 func (controller *Controller) setupAndLaunchUILoop() {

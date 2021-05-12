@@ -14,7 +14,7 @@ func TestLoadFeedData(t *testing.T) {
 	parser := createStubbedParser(&fakeFeed, false)
 
 	testFeed := Feed{URL: testUrlOne}
-	testConfig := ConfigData{[]Feed{ testFeed } }
+	testConfig := ConfigData{[]Feed{testFeed}}
 
 	data := NewData(parser)
 	data.configData = &testConfig
@@ -60,7 +60,7 @@ func TestLoadFeedDataWithFeedWithNoEntries(t *testing.T) {
 		Items: []*gofeed.Item{},
 	}
 	testFeed := Feed{URL: testUrlOne}
-	testConfig := ConfigData{[]Feed{ testFeed } }
+	testConfig := ConfigData{[]Feed{testFeed}}
 
 	parser := createStubbedParser(&fakeFeedWithNoEntries, false)
 	data := NewData(parser)
@@ -70,7 +70,7 @@ func TestLoadFeedDataWithFeedWithNoEntries(t *testing.T) {
 	err := data.loadDataFromFeeds()
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "error feed at url: " + testUrlOne + " has no entries", err.Error())
+	assert.Equal(t, "error feed at url: "+testUrlOne+" has no entries", err.Error())
 }
 
 func TestLoadJsonConfig(t *testing.T) {
@@ -161,12 +161,12 @@ func CreateTestFeed() gofeed.Feed {
 	fakeItemOne := &gofeed.Item{
 		Title:       "Test Entry Title One",
 		Description: "Fake Entry Description One",
-		Link:        testUrlOne+"/one",
+		Link:        testUrlOne + "/one",
 	}
 	fakeItemTwo := &gofeed.Item{
 		Title:       "Test Entry Title Two",
 		Description: "Fake Entry Description Two",
-		Link:        testUrlOne+"/two",
+		Link:        testUrlOne + "/two",
 	}
 	fakeFeed := gofeed.Feed{
 		Title: "Test Feed Title From Parser",

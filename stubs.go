@@ -33,9 +33,9 @@ type StubbedApp struct {
 // CreateStubbedApp returns app with simulation screen for tests
 func CreateStubbedApp(failRun bool) TermApplication {
 	app := &StubbedApp{
-		FailRun:		failRun,
-		UpdateDraws:	make([]func(), 0, 1),
-		mutex:			&sync.Mutex{},
+		FailRun:     failRun,
+		UpdateDraws: make([]func(), 0, 1),
+		mutex:       &sync.Mutex{},
 	}
 	return app
 }
@@ -90,13 +90,13 @@ func (app *StubbedApp) GetInputCapture() func(event *tcell.EventKey) *tcell.Even
 }
 
 type StubbedParser struct {
-	fakeFeed	*gofeed.Feed
-	withError	bool
+	fakeFeed  *gofeed.Feed
+	withError bool
 }
 
 func createStubbedParser(fakeFeed *gofeed.Feed, withError bool) FeedParser {
 	parser := &StubbedParser{
-		fakeFeed: fakeFeed,
+		fakeFeed:  fakeFeed,
 		withError: withError,
 	}
 
@@ -127,11 +127,6 @@ func (sbl StubbedBrowserLauncher) OpenDefault(_ string) error {
 type StubbedBuffer struct {
 }
 
-
 func (mb StubbedBuffer) Read(p []byte) (n int, err error) {
 	return 0, errors.New("stubbed buffer error")
 }
-
-
-
-
