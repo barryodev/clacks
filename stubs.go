@@ -89,6 +89,7 @@ func (app *StubbedApp) GetInputCapture() func(event *tcell.EventKey) *tcell.Even
 	return nil
 }
 
+// StubbedParser holds fake data and throws error when bool is set true
 type StubbedParser struct {
 	fakeFeed  *gofeed.Feed
 	withError bool
@@ -107,15 +108,17 @@ func createStubbedParser(fakeFeed *gofeed.Feed, withError bool) FeedParser {
 func (parser *StubbedParser) ParseURL(_ string) (feed *gofeed.Feed, err error) {
 	if parser.withError {
 		return nil, errors.New("stubbed parser error")
-	} else {
-		return parser.fakeFeed, nil
 	}
+
+	return parser.fakeFeed, nil
 }
 
+// StubbedBrowserLauncher does nothing and throws error when bool is set true
 type StubbedBrowserLauncher struct {
 	withError bool
 }
 
+// OpenDefault does nothing but throws error if withError bool is set true
 func (sbl StubbedBrowserLauncher) OpenDefault(_ string) error {
 	if sbl.withError {
 		return errors.New("stubbed browser launcher error")

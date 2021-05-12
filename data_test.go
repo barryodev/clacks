@@ -13,7 +13,7 @@ func TestLoadFeedData(t *testing.T) {
 	fakeFeed := CreateTestFeed()
 	parser := createStubbedParser(&fakeFeed, false)
 
-	testFeed := Feed{URL: testUrlOne}
+	testFeed := Feed{URL: testURLOne}
 	testConfig := ConfigData{[]Feed{testFeed}}
 
 	data := NewData(parser)
@@ -21,7 +21,7 @@ func TestLoadFeedData(t *testing.T) {
 	err := data.loadDataFromFeeds()
 
 	assert.Nil(t, err)
-	feedDataModel := data.safeFeedData.GetEntries(testUrlOne)
+	feedDataModel := data.safeFeedData.GetEntries(testURLOne)
 	assert.Equal(t, fakeFeed.Title, feedDataModel.name)
 	assert.Equal(t, 2, len(feedDataModel.entries))
 
@@ -38,7 +38,7 @@ func TestLoadFeedDataWithError(t *testing.T) {
 	parser := createStubbedParser(nil, true)
 
 	data := NewData(parser)
-	err := data.loadFeedData(testUrlOne)
+	err := data.loadFeedData(testURLOne)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "error loading feed: stubbed parser error", err.Error())
@@ -59,7 +59,7 @@ func TestLoadFeedDataWithFeedWithNoEntries(t *testing.T) {
 		Title: "Test Feed Title From Parser",
 		Items: []*gofeed.Item{},
 	}
-	testFeed := Feed{URL: testUrlOne}
+	testFeed := Feed{URL: testURLOne}
 	testConfig := ConfigData{[]Feed{testFeed}}
 
 	parser := createStubbedParser(&fakeFeedWithNoEntries, false)
@@ -70,14 +70,14 @@ func TestLoadFeedDataWithFeedWithNoEntries(t *testing.T) {
 	err := data.loadDataFromFeeds()
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "error feed at url: "+testUrlOne+" has no entries", err.Error())
+	assert.Equal(t, "error feed at url: "+testURLOne+" has no entries", err.Error())
 }
 
 func TestLoadJsonConfig(t *testing.T) {
 	parser := createStubbedParser(nil, false)
 	data := NewData(parser)
 
-	err := data.loadJsonConfig(configFileName)
+	err := data.loadJSONConfig(configFileName)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(data.configData.Feeds))
@@ -89,7 +89,7 @@ func TestLoadJsonConfigWithMissingFile(t *testing.T) {
 	parser := createStubbedParser(nil, false)
 	data := NewData(parser)
 
-	err := data.loadJsonConfig("badfilename.json")
+	err := data.loadJSONConfig("badfilename.json")
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "error: could not find feeds.json config file", err.Error())
@@ -99,14 +99,14 @@ func TestLoadJsonConfigReturnsErrorFromParse(t *testing.T) {
 	parser := createStubbedParser(nil, true)
 	data := NewData(parser)
 
-	err := data.loadJsonConfig(badConfigFile)
+	err := data.loadJSONConfig(badConfigFile)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "error reading feeds.json, please check structure", err.Error())
 }
 
 func TestParseConfigWithGoodJson(t *testing.T) {
-	goodJson := `{
+	goodJSON := `{
 				  "feeds": [
 					{
 					  "url": "https://blah.com/rss"
@@ -117,7 +117,7 @@ func TestParseConfigWithGoodJson(t *testing.T) {
 				  ]
 				}`
 
-	r := strings.NewReader(goodJson)
+	r := strings.NewReader(goodJSON)
 
 	configData, err := parseConfig(r)
 
@@ -128,7 +128,7 @@ func TestParseConfigWithGoodJson(t *testing.T) {
 }
 
 func TestParseConfigWithMalformedJson(t *testing.T) {
-	badJson := `{
+	badJSON := `{
 				  "feasdfasdfds": [
 					{
 					  "uasdfasdfrl": "https://blah.com/rss"
@@ -139,7 +139,7 @@ func TestParseConfigWithMalformedJson(t *testing.T) {
 				  ]
 				asdfasdff}`
 
-	r := strings.NewReader(badJson)
+	r := strings.NewReader(badJSON)
 
 	configData, err := parseConfig(r)
 
@@ -161,12 +161,12 @@ func CreateTestFeed() gofeed.Feed {
 	fakeItemOne := &gofeed.Item{
 		Title:       "Test Entry Title One",
 		Description: "Fake Entry Description One",
-		Link:        testUrlOne + "/one",
+		Link:        testURLOne + "/one",
 	}
 	fakeItemTwo := &gofeed.Item{
 		Title:       "Test Entry Title Two",
 		Description: "Fake Entry Description Two",
-		Link:        testUrlOne + "/two",
+		Link:        testURLOne + "/two",
 	}
 	fakeFeed := gofeed.Feed{
 		Title: "Test Feed Title From Parser",

@@ -144,9 +144,9 @@ func (ui *UI) setupLists() {
 	})
 
 	// load initial state of interface
-	ui.loadEntriesIntoList(ui.getSelectedFeedUrl())
+	ui.loadEntriesIntoList(ui.getSelectedFeedURL())
 	//make sure there's at least one entry in selected
-	if len(ui.data.safeFeedData.GetEntries(ui.getSelectedFeedUrl()).entries) > 0 {
+	if len(ui.data.safeFeedData.GetEntries(ui.getSelectedFeedURL()).entries) > 0 {
 		ui.loadEntryTextView(0)
 	}
 
@@ -161,14 +161,14 @@ func (ui *UI) switchAppFocus(newBox *tview.Box, oldBox *tview.Box, newFocus tvie
 // Looks up the text of the corresponding entry and sets it on the text view
 func (ui *UI) loadEntryTextView(i int) {
 	ui.entryTextView.Clear()
-	feedData := ui.data.safeFeedData.GetEntries(ui.getSelectedFeedUrl())
+	feedData := ui.data.safeFeedData.GetEntries(ui.getSelectedFeedURL())
 	if feedData.entries != nil {
 		ui.entryTextView.SetText(feedData.entries[i].content)
 	}
 }
 
 // Urls of feeds are stored as secondary text on list items, uses that to look up selected feed
-func (ui *UI) getSelectedFeedUrl() string {
+func (ui *UI) getSelectedFeedURL() string {
 	_, url := ui.feedList.GetItemText(ui.feedList.GetCurrentItem())
 	return url
 }

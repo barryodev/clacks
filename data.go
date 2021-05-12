@@ -22,11 +22,12 @@ type Data struct {
 
 const configFileName = "feeds.json"
 
-// ConfigData & Feed struct to unmarshall json config
+// ConfigData struct to unmarshall collection of urls from JSON config
 type ConfigData struct {
 	Feeds []Feed `json:"feeds"`
 }
 
+// Feed struct to unmarshall individual feed url from JSON config
 type Feed struct {
 	URL string `json:"url"`
 }
@@ -75,7 +76,7 @@ func (c *SafeFeedData) Clear() {
 }
 
 // LoadJsonConfig load feeds from json file
-func (data *Data) loadJsonConfig(fileName string) error {
+func (data *Data) loadJSONConfig(fileName string) error {
 	//open config file
 	configFile, fileError := openConfigFile(fileName)
 	if fileError != nil {
@@ -85,10 +86,9 @@ func (data *Data) loadJsonConfig(fileName string) error {
 	config, parseError := parseConfig(configFile)
 	if parseError != nil {
 		return parseError
-	} else {
-		data.configData = config
-		return nil
 	}
+	data.configData = config
+	return nil
 }
 
 func parseConfig(r io.Reader) (*ConfigData, error) {
@@ -136,9 +136,9 @@ func (data *Data) loadFeedData(url string) error {
 		feedDataModel := FeedDataModel{name: feedName, entries: entrySlice}
 		data.safeFeedData.SetSiteData(url, feedDataModel)
 		return nil
-	} else {
-		return errors.New("error feed at url: " + url + " has no entries")
 	}
+
+	return errors.New("error feed at url: " + url + " has no entries")
 }
 
 // asynchronously fetch atom feeds and load the data into the interface

@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-const testUrlOne = "theregistry.com"
-const testUrlTwo = "google.com"
+const testURLOne = "theregistry.com"
+const testURLTwo = "google.com"
 
 func TestAppRun(t *testing.T) {
 	app := CreateStubbedApp(false)
@@ -83,10 +83,10 @@ func TestFeedsListContainsFeedNameAfterLoadingData(t *testing.T) {
 	}
 
 	listItemOne, _ := ui.feedList.GetItemText(0)
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).name, listItemOne)
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLOne).name, listItemOne)
 
 	listItemTwo, _ := ui.feedList.GetItemText(1)
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).name, listItemTwo)
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLTwo).name, listItemTwo)
 }
 
 func TestSwitchUIFocus(t *testing.T) {
@@ -116,18 +116,18 @@ func TestLoadEntryTextView(t *testing.T) {
 		f()
 	}
 
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[0].content,
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLOne).entries[0].content,
 		ui.entryTextView.GetText(true))
 
 	ui.loadEntryTextView(1)
 
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[1].content,
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLOne).entries[1].content,
 		ui.entryTextView.GetText(true))
 
 	ui.feedList.SetCurrentItem(1)
 	ui.loadEntryTextView(0)
 
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[0].content,
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLTwo).entries[0].content,
 		ui.entryTextView.GetText(true))
 }
 
@@ -136,17 +136,17 @@ func TestLoadEntriesIntoList(t *testing.T) {
 	app := CreateStubbedApp(true)
 	ui := CreateUI(app, data)
 
-	ui.loadEntriesIntoList(testUrlOne)
+	ui.loadEntriesIntoList(testURLOne)
 
 	for _, f := range ui.app.(*StubbedApp).UpdateDraws {
 		f()
 	}
 
 	firstItemText, _ := ui.entriesList.GetItemText(ui.entriesList.GetCurrentItem())
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[0].title, firstItemText)
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLOne).entries[0].title, firstItemText)
 
 	secondItemText, _ := ui.entriesList.GetItemText(1)
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).entries[1].title, secondItemText)
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLOne).entries[1].title, secondItemText)
 }
 
 func TestBrowserLauncherCausesPanic(t *testing.T) {
@@ -320,14 +320,14 @@ func TestUserNavigatesLists(t *testing.T) {
 	defer simScreen.Fini()
 
 	feedName, _ := ui.feedList.GetItemText(0)
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlOne).name, feedName)
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLOne).name, feedName)
 
 	ui.feedList.SetCurrentItem(1)
 	entryName, _ := ui.entriesList.GetItemText(ui.entriesList.GetCurrentItem())
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[0].title, entryName)
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLTwo).entries[0].title, entryName)
 
 	ui.entriesList.SetCurrentItem(1)
-	assert.Equal(t, data.safeFeedData.GetEntries(testUrlTwo).entries[1].content, ui.entryTextView.GetText(true))
+	assert.Equal(t, data.safeFeedData.GetEntries(testURLTwo).entries[1].content, ui.entryTextView.GetText(true))
 }
 
 func TestUserSelectingItemInFeedListAndLeavingEntriesList(t *testing.T) {
@@ -452,10 +452,10 @@ func getScreenContents(simScreen tcell.SimulationScreen) string {
 
 func createTestData(withError bool) *Data {
 	safeFeedData := &SafeFeedData{feedData: make(map[string]FeedDataModel)}
-	safeFeedData.SetSiteData(testUrlOne, createFakeFeedDataModel("registry", testUrlOne))
-	safeFeedData.SetSiteData(testUrlTwo, createFakeFeedDataModel("google", testUrlTwo))
+	safeFeedData.SetSiteData(testURLOne, createFakeFeedDataModel("registry", testURLOne))
+	safeFeedData.SetSiteData(testURLTwo, createFakeFeedDataModel("google", testURLTwo))
 
-	allFeeds := &ConfigData{[]Feed{{testUrlOne}, {testUrlTwo}}}
+	allFeeds := &ConfigData{[]Feed{{testURLOne}, {testURLTwo}}}
 
 	fakeFeed := CreateTestFeed()
 	parser := createStubbedParser(&fakeFeed, withError)

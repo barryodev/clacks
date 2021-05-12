@@ -7,6 +7,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// Controller this struct holds interfaces to external libraries along with ui struct and config filename
 type Controller struct {
 	app             TermApplication
 	feedParser      FeedParser
@@ -33,8 +34,10 @@ type BrowserLauncherInterface interface {
 	OpenDefault(fileOrURL string) error
 }
 
+// BrowserLauncher struct to wrap library that launches browsers
 type BrowserLauncher struct{}
 
+// OpenDefault cross platform method to launch browser from terminal
 func (BrowserLauncher) OpenDefault(fileOrURL string) error {
 	return osx.OpenDefault(fileOrURL)
 }
@@ -44,6 +47,7 @@ type FeedParser interface {
 	ParseURL(feedURL string) (feed *gofeed.Feed, err error)
 }
 
+// NewController factory method to set up controller
 func NewController() *Controller {
 	feedParser := gofeed.NewParser()
 	feedParser.UserAgent = "Clacks - Terminal Atom/RSS Reader"
@@ -57,7 +61,7 @@ func NewController() *Controller {
 func (controller *Controller) setupAndLaunchUILoop() {
 	// init threadsafe feed data
 	data := NewData(controller.feedParser)
-	err := data.loadJsonConfig(controller.configFileName)
+	err := data.loadJSONConfig(controller.configFileName)
 	if err != nil {
 		panic(err)
 	}
